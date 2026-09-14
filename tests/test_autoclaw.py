@@ -91,7 +91,7 @@ class TestHelpers(unittest.TestCase):
             env.pop("AUTOCLAW_TELEMETRY_DIR", None)
             with patch.dict(os.environ, env, clear=True), \
                  patch("resources.is_frozen", return_value=True), \
-                 patch.object(sys, "executable", os.path.join(d, "OpenCost.exe")), \
+                 patch.object(sys, "executable", os.path.join(d, "AgentLedger.exe")), \
                  patch("resources.user_root", return_value=os.path.join(d, "user")):
                 self.assertEqual(default_dir(), os.path.normpath(exe_tel))
                 cands = candidate_dirs()
@@ -105,7 +105,7 @@ class TestHelpers(unittest.TestCase):
             env.pop("AUTOCLAW_TELEMETRY_DIR", None)
             with patch.dict(os.environ, env, clear=True), \
                  patch("resources.is_frozen", return_value=True), \
-                 patch.object(sys, "executable", os.path.join(d, "OpenCost.exe")), \
+                 patch.object(sys, "executable", os.path.join(d, "AgentLedger.exe")), \
                  patch("resources.user_root", return_value=os.path.join(d, "user")):
                 self.assertEqual(default_dir(), os.path.normpath(user_tel))
 

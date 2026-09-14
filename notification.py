@@ -9,7 +9,7 @@ import sys
 
 LOGGER = logging.getLogger(__name__)
 
-APP_NAME = "OpenCost"
+APP_NAME = "AgentLedger"
 
 
 def notify(title: str, message: str, *, sound: bool = True) -> bool:
@@ -30,8 +30,8 @@ def _show_windows_notification(title: str, message: str) -> bool:
 
     script = r"""
 $ErrorActionPreference = "Stop"
-$title = [Environment]::GetEnvironmentVariable("OPENCOST_NOTIFICATION_TITLE", "Process")
-$message = [Environment]::GetEnvironmentVariable("OPENCOST_NOTIFICATION_MESSAGE", "Process")
+$title = [Environment]::GetEnvironmentVariable("AGENTLEDGER_NOTIFICATION_TITLE", "Process")
+$message = [Environment]::GetEnvironmentVariable("AGENTLEDGER_NOTIFICATION_MESSAGE", "Process")
 try {
     [Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime] | Out-Null
     $template = [Windows.UI.Notifications.ToastNotificationManager]::GetTemplateContent([Windows.UI.Notifications.ToastTemplateType]::ToastText02)
@@ -39,8 +39,8 @@ try {
     $texts.Item(0).AppendChild($template.CreateTextNode($title)) | Out-Null
     $texts.Item(1).AppendChild($template.CreateTextNode($message)) | Out-Null
     $toast = [Windows.UI.Notifications.ToastNotification]::new($template)
-    $toast.Tag = "OpenCost"
-    $toast.Group = "OpenCost"
+    $toast.Tag = "AgentLedger"
+    $toast.Group = "AgentLedger"
     $toast.ExpirationTime = [DateTimeOffset]::Now.AddMinutes(1)
     [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier().Show($toast)
     exit 0
@@ -49,8 +49,8 @@ try {
 }
 """.strip()
     env = os.environ.copy()
-    env["OPENCOST_NOTIFICATION_TITLE"] = title[:200]
-    env["OPENCOST_NOTIFICATION_MESSAGE"] = message[:1000]
+    env["AGENTLEDGER_NOTIFICATION_TITLE"] = title[:200]
+    env["AGENTLEDGER_NOTIFICATION_MESSAGE"] = message[:1000]
     encoded = base64.b64encode(script.encode("utf-16le")).decode("ascii")
     try:
         result = subprocess.run(

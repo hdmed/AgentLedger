@@ -60,7 +60,7 @@ class TestIntegration(unittest.TestCase):
 
         with open(self.report_path, "r", encoding="utf-8") as f:
             html = f.read()
-            self.assertIn("Usage AI", html)
+            self.assertIn("AgentLedger", html)
             self.assertIn("Test Session", html)
 
 if __name__ == "__main__":

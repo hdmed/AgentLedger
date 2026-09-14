@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Genere dist/report.html : rapport visuel 100%% hors-ligne.
+"""Generate dist/report.html: a 100%% offline visual report.
 
-Lit data/dataset.json (produit par extract.py), inline Chart.js et le
-dataset, puis ecrit un fichier HTML unique, consultable sans reseau.
+Reads data/dataset.json (produced by extract.py), inlines Chart.js and the
+dataset, then writes a single HTML file viewable without network.
 
-Usage : python build_report.py [--dataset data/dataset.json] [--out dist/report.html]
+Usage: python build_report.py [--dataset data/dataset.json] [--out dist/report.html]
 """
 
 import argparse
@@ -41,23 +41,23 @@ def generate_report(dataset_path=DEFAULT_DATASET, out_path=DEFAULT_OUT, strict=F
         with open(dataset_path, "r", encoding="utf-8") as f:
             dataset = json.load(f)
     except (OSError, json.JSONDecodeError) as e:
-        logger.error("impossible de lire {}: {}".format(dataset_path, e))
-        print("Lancer d'abord : python extract.py --full")
+        logger.error("cannot read {}: {}".format(dataset_path, e))
+        print("Run first: python extract.py --full")
         raise SystemExit(1)
 
     chartjs = read_asset(CHART_JS)
     if not TEMPLATE:
-        msg = "AVERTISSEMENT: {} introuvable, rapport impossible".format(TEMPLATE_PATH)
+        msg = "WARNING: {} not found, report impossible".format(TEMPLATE_PATH)
         logger.warning(msg)
         if strict:
             raise SystemExit(1)
     if not chartjs:
-        msg = "AVERTISSEMENT: {} introuvable, graphes desactives".format(CHART_JS)
+        msg = "WARNING: {} not found, charts disabled".format(CHART_JS)
         logger.warning(msg)
         if strict:
             raise SystemExit(1)
 
-    # securite inline : neutralise les tags dans les contenus injectes uniquement
+    # inline safety: neutralize tags in injected content only
     def sanitize(content):
         return (content.replace("</script", "<\\/script")
                 .replace("<!--", "<\\!--")
@@ -68,7 +68,7 @@ def generate_report(dataset_path=DEFAULT_DATASET, out_path=DEFAULT_OUT, strict=F
         dataset_json = "{}"
         html = TEMPLATE.replace("/*__DATASET__*/", dataset_json)
         loader = """
-<div id="loading" style="text-align:center;padding:20px;color:var(--mut)">Chargement donnees...</div>
+<div id="loading" style="text-align:center;padding:20px;color:var(--mut)">Loading data...</div>
 <script>
 (function(){
   const ds = document.currentScript.dataset.src || "data/dataset.json";
@@ -78,7 +78,7 @@ def generate_report(dataset_path=DEFAULT_DATASET, out_path=DEFAULT_OUT, strict=F
     if(typeof initApp==='function') initApp();
   }).catch(e=>{
     const el=document.getElementById('loading');
-    if(el) el.textContent='Erreur chargement '+ds+': '+e;
+    if(el) el.textContent='Error loading '+ds+': '+e;
   });
 })();
 </script>
@@ -101,16 +101,16 @@ def generate_report(dataset_path=DEFAULT_DATASET, out_path=DEFAULT_OUT, strict=F
         f.write(html)
 
     logger.info("[build] OK -> {} ({:.2f} MB)".format(out_path, os.path.getsize(out_path) / 1e6))
-    logger.info("[build] {} sessions, {} modeles{}".format(len(dataset.get("sessions", [])), len(dataset.get("models", [])), " (external)" if external else ""))
+    logger.info("[build] {} sessions, {} models{}".format(len(dataset.get("sessions", [])), len(dataset.get("models", [])), " (external)" if external else ""))
     return out_path
 
 
 def main():
-    ap = argparse.ArgumentParser(description="Generation rapport HTML hors-ligne")
+    ap = argparse.ArgumentParser(description="Offline HTML report generation")
     ap.add_argument("--dataset", default=DEFAULT_DATASET)
     ap.add_argument("--out", default=DEFAULT_OUT)
-    ap.add_argument("--strict", action="store_true", help="echoue si Chart.js manquant")
-    ap.add_argument("--external", action="store_true", help="dataset externe (fetch) au lieu d'inline, pour gros volumes")
+    ap.add_argument("--strict", action="store_true", help="fail when Chart.js is missing")
+    ap.add_argument("--external", action="store_true", help="external dataset (fetch) instead of inline, for large volumes")
     args = ap.parse_args()
     generate_report(args.dataset, args.out, args.strict, args.external)
 

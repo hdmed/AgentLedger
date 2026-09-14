@@ -1,30 +1,36 @@
 PYTHON := python
 
-.PHONY: extract report watch full all clean open open-app test exe exe-debug
+.PHONY: extract report watch full all clean open open-app test check-js exe exe-debug
 
-# Extraction incrémentale (delta depuis le dernier sync)
+# Incremental extraction (delta since the last sync)
 extract:
 	$(PYTHON) extract.py
 
-# Ré-extraction complète (à utiliser après modification de config/pricing.json)
+# Full re-extraction (use after editing config/pricing.json)
 full:
 	$(PYTHON) extract.py --full
 
-# Génère dist/report.html (offline)
+# Build dist/report.html (offline)
 report:
 	$(PYTHON) extract.py
 	$(PYTHON) build_report.py
 
-# Re-extraction complète + rapport
+# Full re-extraction + report
 all: full report
 
-# Surveille opencode.db et régénère automatiquement (extract + build)
+# Watch opencode.db and regenerate automatically (extract + build)
 watch:
 	$(PYTHON) extract.py --watch --build
 
-# Ouvre le rapport
+# Open the report
 open:
 	$(PYTHON) -c "import os,webbrowser; webbrowser.open('file:///'+os.path.abspath('dist/report.html'))"
+
+# Validate the template inline JS (dataset placeholder substituted)
+check-js:
+	$(PYTHON) -c "import re; h=open('templates/report_template.html',encoding='utf-8').read().replace('/*__DATASET__*/','{}'); open('__tpl_check.js','w',encoding='utf-8').write('\n'.join(re.findall(r'<script>(.*?)</script>',h,re.S)))"
+	node --check __tpl_check.js
+	$(PYTHON) -c "import os; os.remove('__tpl_check.js')"
 
 test:
 	$(PYTHON) -m py_compile extract.py extract_kilo.py extract_autoclaw.py extract_workbuddy.py build_report.py resources.py launcher.py build_exe.py notification.py
@@ -39,6 +45,6 @@ exe-debug:
 open-app:
 	$(PYTHON) launcher.py
 
-# Remet à zéro le cache d'extraction (dataset + état de sync + rapport)
+# Reset extraction cache (dataset + all sync states + report)
 clean:
-	$(PYTHON) -c "import os; [os.remove(f) for f in ['data/dataset.json','data/sync_state.json','dist/report.html'] if os.path.exists(f)]"
+	$(PYTHON) -c "import os; [os.remove(f) for f in ['data/dataset.json','data/sync_state.json','data/kilo_sync_state.json','data/autoclaw_sync_state.json','data/workbuddy_sync_state.json','dist/report.html'] if os.path.exists(f)]"

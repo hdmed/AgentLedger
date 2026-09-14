@@ -15,29 +15,42 @@ AUTOCLAW_STATE_PATH = resources.data_path("autoclaw_sync_state.json")
 SCHEMA_JOURNAL = "journal-v1"
 SCHEMA_SNAPSHOT = "snapshot-v1"
 
-logger = logging.getLogger("opencost.autoclaw")
+logger = logging.getLogger("agentledger.autoclaw")
 
 
 class AutoclawSchemaError(RuntimeError):
     pass
 
 
+def canonical_dir() -> str:
+    """Canonical per-user telemetry folder (first choice when it exists).
+
+    Copy `journal.js` / `latest.js` (as produced by the TDB collector)
+    into this folder, or point `AUTOCLAW_TELEMETRY_DIR` / `--autoclaw-dir`
+    at your own location.
+    """
+    return os.path.join(resources.user_root(), "telemetry")
+
+
+def legacy_dir() -> str:
+    """Historical vendored location (kept as a last-resort fallback)."""
+    return resources.resource_path(
+        "Docs", "AutCLW", "TDB", "openclaw-tdb", "telemetry"
+    )
+
+
 def candidate_dirs() -> list[str]:
-    """Emplacements telemetry/ cherchés dans l'ordre (le 1er existant gagne)."""
+    """telemetry/ locations searched in order (first existing one wins)."""
     candidates: list[str] = []
     override = os.environ.get("AUTOCLAW_TELEMETRY_DIR")
     if override:
         candidates.append(os.path.abspath(os.path.expanduser(override)))
+    candidates.append(canonical_dir())
     if resources.is_frozen():
         import sys as _sys
         exe_dir = os.path.dirname(os.path.abspath(_sys.executable))
         candidates.append(os.path.join(exe_dir, "telemetry"))
-        candidates.append(os.path.join(resources.user_root(), "telemetry"))
-        candidates.append(os.path.join(exe_dir, "..", "Docs", "AutCLW", "TDB",
-                                       "openclaw-tdb", "telemetry"))
-    candidates.append(resources.resource_path(
-        "Docs", "AutCLW", "TDB", "openclaw-tdb", "telemetry"
-    ))
+    candidates.append(legacy_dir())
     seen: list[str] = []
     for path in candidates:
         norm = os.path.normpath(path)
@@ -53,11 +66,11 @@ def default_dir() -> str:
     for path in candidate_dirs():
         if os.path.isdir(path):
             return path
-    return candidate_dirs()[-1]
+    return canonical_dir()
 
 
 def _parse_ts(value: Any) -> int | None:
-    """Horodatage ISO (avec offset) -> epoch UTC en secondes. None si absent/invalide."""
+    """ISO timestamp (with offset) -> UTC epoch seconds. None when missing/invalid."""
     if value is None:
         return None
     if isinstance(value, (int, float)):
@@ -98,20 +111,20 @@ def _split_model(provider: Any, model: Any) -> tuple[str, str]:
 
 
 def _load_js_value(path: str, var: str) -> Any:
-    """Lit un fichier `window.VAR = <json>;` sans l'exécuter. Lève en cas de contenu invalide."""
+    """Read a `window.VAR = <json>;` file without executing it. Raises on invalid content."""
     with open(path, "r", encoding="utf-8") as handle:
         text = handle.read().strip()
     prefix = "window.{}=".format(var)
     if not text.startswith(prefix):
-        raise AutoclawSchemaError("{}: préfixe '{}' introuvable".format(path, prefix))
+        raise AutoclawSchemaError("{}: '{}' prefix not found".format(path, prefix))
     payload = text[len(prefix):].strip()
     try:
-        # raw_decode : ignore un éventuel `;` et les variables suivantes
+        # raw_decode: ignore a trailing `;` and any following variables
         # (ex. journal.js contient aussi window.TDB_HOURLY).
         value, _ = json.JSONDecoder().raw_decode(payload)
         return value
     except json.JSONDecodeError as exc:
-        raise AutoclawSchemaError("{}: JSON invalide ({})".format(path, exc))
+        raise AutoclawSchemaError("{}: invalid JSON ({})".format(path, exc))
 
 
 def read_journal(telemetry_dir: str) -> list[dict[str, Any]]:
@@ -120,7 +133,7 @@ def read_journal(telemetry_dir: str) -> list[dict[str, Any]]:
         return []
     data = _load_js_value(path, "TDB_JOURNAL")
     if not isinstance(data, list):
-        raise AutoclawSchemaError("journal.js: tableau TDB_JOURNAL attendu")
+        raise AutoclawSchemaError("journal.js: TDB_JOURNAL array expected")
     return [e for e in data if isinstance(e, dict)]
 
 
@@ -130,7 +143,7 @@ def read_snapshot(telemetry_dir: str) -> dict[str, Any]:
         return {}
     data = _load_js_value(path, "TDB_REMOTE")
     if not isinstance(data, dict):
-        raise AutoclawSchemaError("latest.js: objet TDB_REMOTE attendu")
+        raise AutoclawSchemaError("latest.js: TDB_REMOTE object expected")
     return data
 
 
@@ -152,7 +165,7 @@ def _group_from_journal(entries: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 tokens_input += _integer(entry.get("inputTokens"))
                 tokens_output += _integer(entry.get("outputTokens"))
             elif entry.get("tokens") is not None:
-                # Fallback contrôlé : total non ventilé compté en entrée.
+                # controlled fallback: undifferentiated total counted as input.
                 tokens_input += _integer(entry.get("tokens"))
             cache_read += _integer(entry.get("cacheReadTokens"))
         labels = Counter(
@@ -231,14 +244,14 @@ def _sessions_from_snapshot(snapshot: dict[str, Any]) -> list[dict[str, Any]]:
 
 
 def fetch_sessions(telemetry_dir: str, watermark: int = 0, full: bool = False) -> list[dict[str, Any]]:
-    """Lit la télémétrie en read-only et mappe vers le modèle commun.
+    """Read telemetry read-only and map it onto the common model.
 
-    Source primaire : journal.js agrégé par session. Repli : sessions du
-    snapshot latest.js quand le journal est absent ou vide (jamais les deux
-    à la fois, pour éviter tout double comptage).
+    Primary source: journal.js aggregated by session. Fallback: the
+    latest.js snapshot sessions when the journal is missing or empty
+    (never both at once, to avoid any double counting).
     """
     if not os.path.isdir(telemetry_dir):
-        raise AutoclawSchemaError("dossier télémétrie introuvable: {}".format(telemetry_dir))
+        raise AutoclawSchemaError("telemetry folder not found: {}".format(telemetry_dir))
     entries = read_journal(telemetry_dir)
     if entries:
         if not full:
@@ -279,7 +292,7 @@ def extract(
                 watermark = int(datetime.strptime(since, "%Y-%m-%d").replace(
                     tzinfo=timezone.utc).timestamp())
             except ValueError:
-                raise ValueError("date AutoClaw invalide; format attendu: AAAA-MM-JJ")
+                raise ValueError("invalid AutoClaw date; expected format: YYYY-MM-DD")
             merged: dict[str, dict[str, Any]] = {}
         else:
             state = _load_json(state_path, {"last_time_updated": 0})
@@ -309,7 +322,7 @@ def extract(
             "new_sessions": len(new_rows),
         }
     except (AutoclawSchemaError, OSError, ValueError) as exc:
-        logger.error("AutoClaw indisponible: %s", exc)
+        logger.error("AutoClaw unavailable: %s", exc)
         return {"status": "error", "source": SOURCE,
                 "telemetry_dir": telemetry_dir, "error": str(exc), "sessions": []}
 
@@ -337,12 +350,12 @@ def _save_json(path: str, data: Any) -> None:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Connecteur AutoClaw read-only pour OpenCost")
-    parser.add_argument("--dir", default=default_dir(), help="dossier telemetry/ AutoClaw")
-    parser.add_argument("--full", action="store_true", help="re-extraction complète")
-    parser.add_argument("--since", help="extraction depuis une date AAAA-MM-JJ")
-    parser.add_argument("--out-dataset", default=resources.dataset_path(), help="dataset de sortie")
-    parser.add_argument("--state", default=AUTOCLAW_STATE_PATH, help="état de synchronisation")
+    parser = argparse.ArgumentParser(description="Read-only AutoClaw connector for AgentLedger")
+    parser.add_argument("--dir", default=default_dir(), help="AutoClaw telemetry/ folder")
+    parser.add_argument("--full", action="store_true", help="full re-extraction")
+    parser.add_argument("--since", help="extract from a YYYY-MM-DD date")
+    parser.add_argument("--out-dataset", default=resources.dataset_path(), help="output dataset file")
+    parser.add_argument("--state", default=AUTOCLAW_STATE_PATH, help="sync state file")
     args = parser.parse_args()
     result = extract(args, args.out_dataset, args.state)
     print(json.dumps(result, ensure_ascii=False, indent=1))

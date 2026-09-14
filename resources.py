@@ -4,14 +4,17 @@ import os
 import shutil
 import sys
 
-APP_NAME = "OpenCost"
+APP_NAME = "AgentLedger"
+
+# Legacy env names from the OpenCost era, still honored as fallback.
+LEGACY_APP_NAME = "OpenCost"
 
 
 def basename_crossplatform(path: str | None) -> str:
-    """Dernier segment d'un chemin Windows ou posix, sur n'importe quel OS.
+    """Last segment of a Windows or posix path, on any OS.
 
-    `os.path.basename` seul échoue sur les chemins Windows (`C:\\...`)
-    quand les tests tournent sous Linux (CI) et inversement.
+    Plain `os.path.basename` fails on Windows paths (`C:\\...`)
+    when tests run on Linux (CI) and vice versa.
     """
     import re
 
@@ -30,8 +33,17 @@ def app_root() -> str:
     return os.path.dirname(os.path.abspath(__file__))
 
 
+def user_dir_override() -> str | None:
+    return (
+        os.environ.get("AGENTLEDGER_USER_DIR")
+        or os.environ.get("AGENTLEDGER_APPDATA")
+        or os.environ.get("OPENCOST_USER_DIR")
+        or os.environ.get("OPENCOST_APPDATA")
+    )
+
+
 def user_root() -> str:
-    override = os.environ.get("OPENCOST_USER_DIR") or os.environ.get("OPENCOST_APPDATA")
+    override = user_dir_override()
     if override:
         return os.path.abspath(os.path.expanduser(override))
     if os.name == "nt":
@@ -54,7 +66,7 @@ def ensure_dir(path: str) -> None:
 
 
 def data_path(name: str) -> str:
-    if is_frozen() or os.environ.get("OPENCOST_USER_DIR") or os.environ.get("OPENCOST_APPDATA"):
+    if is_frozen() or user_dir_override():
         path = os.path.join(user_root(), "data", name)
         ensure_dir(os.path.dirname(path))
         return path
@@ -70,7 +82,7 @@ def dataset_path() -> str:
 
 
 def report_path() -> str:
-    if is_frozen() or os.environ.get("OPENCOST_USER_DIR") or os.environ.get("OPENCOST_APPDATA"):
+    if is_frozen() or user_dir_override():
         path = os.path.join(user_root(), "dist", "report.html")
         ensure_dir(os.path.dirname(path))
         return path
@@ -78,7 +90,7 @@ def report_path() -> str:
 
 
 def config_path(name: str) -> str:
-    if is_frozen() or os.environ.get("OPENCOST_USER_DIR") or os.environ.get("OPENCOST_APPDATA"):
+    if is_frozen() or user_dir_override():
         target = os.path.join(user_root(), "config", name)
         ensure_dir(os.path.dirname(target))
         bundled = resource_path("config", name)

@@ -1,62 +1,63 @@
-# WorkBuddy — connecteur
+# WorkBuddy connector
 
-WorkBuddy AI (application desktop, constaté sous
-`%LOCALAPPDATA%\Programs\WorkBuddyAI`) est intégré via
-`extract_workbuddy.py` : lecture SQLite **read-only** (`mode=ro`) de
-`~\.workbuddy-ai\workbuddy.db`, sans écrire ni verrouiller la base
-(qui reste utilisable par l'application en cours d'exécution).
+WorkBuddy AI (desktop app, found under
+`%LOCALAPPDATA%\Programs\WorkBuddyAI`) is integrated via
+`extract_workbuddy.py`: **read-only** SQLite reads (`mode=ro`) of
+`~\.workbuddy-ai\workbuddy.db`, without writing or locking the database
+(which stays usable by the running application).
 
-## Schéma observé (inventaire non destructif)
+## Observed schema (non-destructive inventory)
 
-- `sessions` : `id`, `cwd`, `title`/`custom_title`, `status`, `created_at`,
-  `updated_at`, `last_activity_at`, `deleted_at` (**millisecondes**),
-  `mode` (ex. `craft`), `model` (**nom nu**, ex. `deepseek-v4.1-flash`),
-  `project_id` (souvent `NULL`).
-- `session_usage` : `session_id`, `used`/`size` (remplissage de la fenêtre
-  de contexte), `updated_at`, `credit_json` (`{uuid: montant}`).
-- Tables ignorées : `workspaces` (vide), `automations`, `buddy_snapshots`,
+- `sessions`: `id`, `cwd`, `title`/`custom_title`, `status`, `created_at`,
+  `updated_at`, `last_activity_at`, `deleted_at` (**milliseconds**),
+  `mode` (e.g. `craft`), `model` (**bare name**, e.g. `deepseek-v4.1-flash`),
+  `project_id` (often `NULL`).
+- `session_usage`: `session_id`, `used`/`size` (context-window fill),
+  `updated_at`, `credit_json` (`{uuid: amount}`).
+- Ignored tables: `workspaces` (empty), `automations`, `buddy_snapshots`,
   `*_outbox`, migrations.
 
-## Mapping vers le modèle commun
+## Mapping onto the common model
 
-| Modèle commun | Champ WorkBuddy | Remarque |
+| Common model | WorkBuddy field | Note |
 |---|---|---|
 | `source` | `workbuddy` | constant |
 | `source_session_id` | `sessions.id` | stable |
-| `project` | basename de `cwd` | `project_id` étant `NULL`, repli `?` |
-| `agent` | `mode` | ex. `craft` |
-| `model_provider` | `?` | noms de modèles non qualifiés |
-| `model_id` | `sessions.model` | valeur brute conservée |
+| `project` | basename of `cwd` | `project_id` is `NULL`, `?` fallback |
+| `agent` | `mode` | e.g. `craft` |
+| `model_provider` | `?` | model names are unqualified |
+| `model_id` | `sessions.model` | raw value kept |
 | `time_created` / `time_updated` | `created_at` / `max(updated_at, last_activity_at)` | ms → s UTC |
-| `tokens_input` | `session_usage.used` | **fallback contrôlé** : remplissage contexte, pas des tokens facturés |
-| `tokens_output` / autres | `0` | indisponibles dans la source |
-| `cost` | somme de `credit_json` | **crédits du plan WorkBuddy, PAS des USD** (cf. ci-dessous) |
-| `cost_source` | `pricing` si override, sinon `workbuddy` | résolu à la fusion |
-| `archived` | `deleted_at IS NOT NULL` | sessions supprimées conservées avec flag |
+| `tokens_input` | `session_usage.used` | **controlled fallback**: context fill, not billed tokens |
+| `tokens_output` / others | `0` | unavailable in the source |
+| `cost` | sum of `credit_json` | **WorkBuddy plan credits, NOT USD** (see below) |
+| `cost_source` | `pricing` on override, else `workbuddy` | resolved at merge |
+| `archived` | `deleted_at IS NOT NULL` | deleted sessions kept with flag |
 
-## Avertissement unités de coût
+## Cost-unit warning
 
-WorkBuddy facture au **Token Plan** (quota de crédits), pas au token :
-les montants importés sont des **crédits**, mélangés aux USD dans les totaux
-du dataset. Le `cost_source="workbuddy"` et la colonne Coût du rapport
-permettent de les distinguer ; ne pas comparer frontalement aux coûts USD
-des autres sources. Une session sans crédits est importée à `0.0` explicite.
+WorkBuddy bills via a **Token Plan** (credit quota), not per token:
+imported amounts are **credits**, mixed with USD in dataset totals.
+`cost_source="workbuddy"` and the report's Cost column tell them apart;
+do not compare them head-on with other sources' USD costs. A creditless
+session imports at an explicit `0.0`.
 
-## Fonctionnement
+## Behavior
 
-- Watermark indépendant sur `updated_at` (secondes), état séparé
-  `data/workbuddy_sync_state.json` (sessions mises en cache, pas de
-  réécriture si rien de nouveau).
-- `session_usage` absente → tokens et coût à `0`, import préservé.
-- Base absente, verrouillée, corrompue ou schéma inconnu → statut
-  `missing`/`error` explicite, autres sources préservées.
-- Options : `--workbuddy-db`, `--workbuddy-full`, `--workbuddy-since`,
-  `--no-workbuddy` (env `WORKBUDDY_DB`). Chemin par défaut Windows :
-  `%USERPROFILE%\.workbuddy-ai\workbuddy.db` (fonctionne aussi en EXE).
-- `launcher --diagnose` affiche `workbuddy_database(_exists)` et `workbuddy_state`.
+- Independent watermark on `updated_at` (seconds), separate state
+  `data/workbuddy_sync_state.json` (sessions cached, no rewrite when
+  nothing is new).
+- Missing `session_usage` → zero tokens and cost, import preserved.
+- Missing, locked, corrupt database or unknown schema → explicit
+  `missing`/`error` status, other sources preserved.
+- Options: `--workbuddy-db`, `--workbuddy-full`, `--workbuddy-since`,
+  `--no-workbuddy` (`WORKBUDDY_DB` env). Default Windows path:
+  `%USERPROFILE%\.workbuddy-ai\workbuddy.db` (also works frozen).
+- `launcher --diagnose` shows `workbuddy_database(_exists)` and
+  `workbuddy_state`.
 
-## Fichiers liés
+## Related files
 
-- Connecteur : `extract_workbuddy.py`
-- Tests : `tests/test_workbuddy.py` (fixtures fidèles au schéma observé)
-- Fusion : `launcher.merge_source_result` (clé `(source, source_session_id)`)
+- Connector: `extract_workbuddy.py`
+- Tests: `tests/test_workbuddy.py` (fixtures faithful to the observed schema)
+- Merge: `launcher.merge_source_result` (`(source, source_session_id)` key)

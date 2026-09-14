@@ -1,76 +1,76 @@
-# Tableau de bord — structure et navigation
+# Dashboard — structure and navigation
 
-Le rapport `dist/report.html` est une page unique 100 % hors-ligne, organisée en
-**onglets**, avec une **barre de filtres sticky** et un **drawer de détail**.
-Source : `templates/report_template.html` + dataset inline + Chart.js vendored,
-assemblés par `build_report.py`.
+The `dist/report.html` report is a single 100% offline page organized in
+**tabs**, with a **sticky filter bar** and a **detail drawer**.
+Source: `templates/report_template.html` + inline dataset + vendored
+Chart.js, assembled by `build_report.py`.
 
-## Onglets (vues)
+## Tabs (views)
 
-La navigation se fait par les boutons du header (`role="tablist"`).
-La vue active est persistée dans l'URL (`?view=...`) et donc partageable
-via « 🔗 Partager ». Sans paramètre, la vue d'ensemble s'affiche.
+Navigation uses header buttons (`role="tablist"`).
+The active view persists in the URL (`?view=...`) and is therefore shareable
+via "🔗 Share". Without a parameter, the overview shows.
 
-| Onglet (`view=`) | Contenu |
+| Tab (`view=`) | Contents |
 |---|---|
-| `overview` (défaut) | KPI, graphes coût/tokens par jour, histogramme coût/session, cache & erreurs, prévision 30j, grille budgets, anomalies |
-| `modeles` | Coût par modèle (donut), carte de comparaison multi-modèles, panneau de personnalisation des coûts (`pricing.json`) |
-| `projets` | Coût par agent, coût par équipe, panneau d'édition des budgets (`budgets.json`) |
-| `sessions` | Recherche naturelle (NLQ) + table détaillée plein-largeur avec exports CSV/JSON |
+| `overview` (default) | KPIs, cost/tokens per day charts, cost/session histogram, cache & errors, 30-day forecast, budgets grid, anomalies |
+| `modeles` | Cost-by-model donut, multi-model comparison card, cost customization panel (`pricing.json`) |
+| `projets` | Cost by agent, cost by team, budgets editing panel (`budgets.json`) |
+| `sessions` | Natural-language search (NLQ) + full-width detail table with CSV/JSON exports |
 
-Fonctions JS : `switchView(v)` (bascule + `resize` des graphes visibles),
-`refreshVisibleCharts()` (les canvas des vues cachées ont une taille nulle
-à la création, ils sont redimensionnés à l'activation de leur onglet).
+JS functions: `switchView(v)` (switch + resize of visible charts),
+`refreshVisibleCharts()` (hidden views' canvases have zero size at creation
+and are resized when their tab activates).
 
-## Barre de filtres
+## Filter bar
 
-`#filterbar` reste collée sous le header (`position: sticky`).
-Ligne compacte toujours visible : plage **De/Au**, **recherche titre**,
-**Source**, bouton **＋/－ Filtres**, **Réinitialiser**.
-Le panneau `#filters-panel` (replié par défaut) contient le détail :
-modèles (multi-sélection), agent, projet, équipe, coûts min/max.
+`#filterbar` sticks under the header (`position: sticky`).
+Always-visible compact row: **From/To** range, **title search**,
+**Source**, **＋/－ Filters** button, **Reset**.
+The `#filters-panel` (collapsed by default) holds the detail: multi-model,
+agent, project, team, min/max cost.
 
-Tous les filtres s'appliquent globalement, quelle que soit la vue active :
-KPI, graphes, table et exports reflètent la même sélection.
-État reflété dans l'URL : `from`, `to`, `models`, `agent`, `proj`, `team`,
+All filters apply globally whatever the active view: KPIs, charts, table
+and exports reflect the same selection.
+State mirrored in the URL: `from`, `to`, `models`, `agent`, `proj`, `team`,
 `src`, `q`, `cmin`, `cmax` (`pushURL` / `loadFromURL`).
 
-## Drawer de détail session
+## Session detail drawer
 
-Un clic sur une ligne de la table (hors boutons de note) ouvre `#drawer`,
-panneau latéral avec le détail : titre, source, identifiant stable
-(`source_session_id`), date, modèle, agent, projet, équipe, coût et origine
-du coût, tokens (entrée/sortie, reasoning, cache lu/écrit).
-Fermeture : bouton ✕, clic sur l'overlay, ou Échap.
-Fonctions JS : `openDrawer(sessionId)`, `closeDrawer()`.
+Clicking a table row (outside note buttons) opens `#drawer`, a side panel
+with: title, source, stable id (`source_session_id`), date, model, agent,
+project, team, cost and cost origin, tokens (in/out, reasoning, cache
+read/written).
+Close: ✕ button, overlay click, or Escape.
+JS functions: `openDrawer(sessionId)`, `closeDrawer()`.
 
-## Interactions conservées
+## Kept interactions
 
-- **Drill-down** : un clic sur un graphe filtre et navigue vers l'onglet
-  pertinent (`model` → Modèles, `agent`/`équipe` → Projets, `day` → dates).
-- **Zoom** : clic sur la zone d'un graphe → overlay agrandi ; bouton ⬇ →
-  export PNG du graphe.
-- **Live pricing/budgets** : saisie en direct avec brouillon `localStorage`,
-  export `pricing.json` / `budgets.json` à recopier dans `config/` puis
-  `python extract.py --full && python build_report.py` pour pérenniser.
-- **Notes** : bouton 🗒️ par ligne, stockées en `localStorage` (non exportées).
-- **Thème** clair/sombre persisté ; **impression** = vue active uniquement
-  (header, onglets, filtres, drawer et outils de graphe masqués).
+- **Drill-down**: clicking a chart filters and navigates to the relevant tab
+  (`model` → Models, `agent`/`team` → Projects, `day` → dates).
+- **Zoom**: clicking a chart area opens the enlarged overlay; ⬇ exports the
+  chart as PNG.
+- **Live pricing/budgets**: live typing with `localStorage` draft,
+  `pricing.json` / `budgets.json` export to copy into `config/` then
+  `python extract.py --full && python build_report.py` to persist.
+- **Notes**: 🗒️ button per row, stored in `localStorage` (not exported).
+- **Theme** persisted light/dark; **print** = active view only (header, tabs,
+  filters, drawer and chart tools hidden).
 
-## Ajouter un graphe ou une vue
+## Adding a chart or a view
 
-1. Ajouter le `<canvas id="c-...">` dans la section `<section id="view-...">`
-   cible (chaque `id` de canvas doit rester unique dans le document).
-2. Le construire dans `renderCharts()` via `mkChart('c-...', cfg)` — le
-   dictionnaire `charts` sert au `resize` automatique et aux exports PNG/zoom.
-3. Pour une nouvelle vue : ajouter un bouton `.tab-btn` (`data-view`),
-   une `<section class="view" id="view-...">`, et la déclarer dans `VIEWS`.
-4. Vérifier : `node --check` du script extrait, `python -m unittest`,
+1. Add the `<canvas id="c-...">` inside the target
+   `<section id="view-...">` (each canvas `id` must stay unique).
+2. Build it in `renderCharts()` via `mkChart('c-...', cfg)` — the `charts`
+   dict drives automatic resize and PNG/zoom exports.
+3. For a new view: add a `.tab-btn` (`data-view`), a
+   `<section class="view" id="view-...">`, and declare it in `VIEWS`.
+4. Verify: `node --check` on the extracted script, `python -m unittest`,
    `python build_report.py --strict`.
 
-## Fichiers liés
+## Related files
 
-- Template : `templates/report_template.html`
-- Build : `build_report.py` (structure non modifiée par la restructuration)
-- Tests : `tests/test_launcher.py::test_report_structure_onglets`
-- Données : `data/dataset.json` (généré, ignoré par Git)
+- Template: `templates/report_template.html`
+- Build: `build_report.py` (structure untouched by refactors)
+- Tests: `tests/test_launcher.py::test_report_structure_onglets`
+- Data: `data/dataset.json` (generated, Git-ignored)

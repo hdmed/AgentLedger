@@ -14,7 +14,7 @@ SOURCE = "workbuddy"
 WORKBUDDY_STATE_PATH = resources.data_path("workbuddy_sync_state.json")
 SCHEMA_VERSION = "wb-v1"
 
-logger = logging.getLogger("opencost.workbuddy")
+logger = logging.getLogger("agentledger.workbuddy")
 
 
 class WorkbuddySchemaError(RuntimeError):
@@ -60,7 +60,7 @@ def inspect_schema(db_path: str) -> dict[str, Any]:
             "SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name")]
         session_columns = _columns(conn, "sessions")
         if not session_columns:
-            raise WorkbuddySchemaError("table 'sessions' introuvable")
+            raise WorkbuddySchemaError("table 'sessions' not found")
         return {
             "source": SOURCE,
             "tables": tables,
@@ -73,7 +73,7 @@ def inspect_schema(db_path: str) -> dict[str, Any]:
 
 
 def _seconds(value: Any) -> int:
-    """Horodatages WorkBuddy en millisecondes -> secondes UTC (passe les secondes)."""
+    """WorkBuddy timestamps in milliseconds -> UTC seconds (passes seconds through)."""
     try:
         v = int(float(value))
     except (TypeError, ValueError):
@@ -97,7 +97,7 @@ def _split_model(raw: Any) -> tuple[str, str]:
 
 
 def _credits(raw: Any) -> float:
-    """Coût en crédits du plan WorkBuddy (PAS des USD, cf. documentation)."""
+    """WorkBuddy plan credits cost (NOT USD, see documentation)."""
     if raw is None:
         return 0.0
     try:
@@ -129,7 +129,7 @@ def fetch_sessions(db_path: str, watermark: int = 0, full: bool = False) -> list
     columns = set(schema["session_columns"])
     missing = sorted({"id", "created_at"} - columns)
     if missing:
-        raise WorkbuddySchemaError("colonnes sessions absentes: " + ", ".join(missing))
+        raise WorkbuddySchemaError("missing sessions columns: " + ", ".join(missing))
     where, params = "", ()
     if not full:
         where = " WHERE COALESCE(s.updated_at, s.last_activity_at, s.created_at, 0) > ?"
@@ -210,7 +210,7 @@ def extract(
                 watermark = int(datetime.strptime(since, "%Y-%m-%d").replace(
                     tzinfo=timezone.utc).timestamp())
             except ValueError:
-                raise ValueError("date WorkBuddy invalide; format attendu: AAAA-MM-JJ")
+                raise ValueError("invalid WorkBuddy date; expected format: YYYY-MM-DD")
             merged: dict[str, dict[str, Any]] = {}
         else:
             state = _load_json(state_path, {"last_time_updated": 0})
@@ -238,7 +238,7 @@ def extract(
             "new_sessions": len(new_rows),
         }
     except (WorkbuddySchemaError, sqlite3.Error, OSError, ValueError) as exc:
-        logger.error("WorkBuddy indisponible: %s", exc)
+        logger.error("WorkBuddy unavailable: %s", exc)
         return {"status": "error", "source": SOURCE,
                 "db_path": db_path, "error": str(exc), "sessions": []}
 
@@ -266,12 +266,12 @@ def _save_json(path: str, data: Any) -> None:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Connecteur WorkBuddy read-only pour OpenCost")
-    parser.add_argument("--db", default=default_db_path(), help="chemin vers workbuddy.db")
-    parser.add_argument("--full", action="store_true", help="re-extraction complète")
-    parser.add_argument("--since", help="extraction depuis une date AAAA-MM-JJ")
-    parser.add_argument("--out-dataset", default=resources.dataset_path(), help="dataset de sortie")
-    parser.add_argument("--state", default=WORKBUDDY_STATE_PATH, help="état de synchronisation")
+    parser = argparse.ArgumentParser(description="Read-only WorkBuddy connector for AgentLedger")
+    parser.add_argument("--db", default=default_db_path(), help="path to workbuddy.db")
+    parser.add_argument("--full", action="store_true", help="full re-extraction")
+    parser.add_argument("--since", help="extract from a YYYY-MM-DD date")
+    parser.add_argument("--out-dataset", default=resources.dataset_path(), help="output dataset file")
+    parser.add_argument("--state", default=WORKBUDDY_STATE_PATH, help="sync state file")
     args = parser.parse_args()
     result = extract(args, args.out_dataset, args.state)
     print(json.dumps(result, ensure_ascii=False, indent=1))

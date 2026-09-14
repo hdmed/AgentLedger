@@ -16,7 +16,7 @@ SOURCE = "kilo"
 KILO_STATE_PATH = resources.data_path("kilo_sync_state.json")
 DEFAULT_KILO_DB = None
 
-logger = logging.getLogger("opencost.kilo")
+logger = logging.getLogger("agentledger.kilo")
 
 
 class KiloSchemaError(RuntimeError):
@@ -80,7 +80,7 @@ def inspect_schema(db_path: str) -> dict[str, Any]:
         tables = [row[0] for row in conn.execute("SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name")]
         session_columns = _columns(conn, "session")
         if not session_columns:
-            raise KiloSchemaError("table 'session' introuvable")
+            raise KiloSchemaError("table 'session' not found")
         message_table = "session_message" if "session_message" in tables else "message" if "message" in tables else None
         message_columns = _columns(conn, message_table) if message_table else None
         part_columns = _columns(conn, "part")
@@ -250,7 +250,7 @@ def fetch_sessions(db_path: str, watermark: int = 0, full: bool = False) -> list
     required = {"id", "time_created"}
     missing = sorted(required - columns)
     if missing:
-        raise KiloSchemaError("colonnes session absentes: " + ", ".join(missing))
+        raise KiloSchemaError("missing session columns: " + ", ".join(missing))
     selected = [
         "id", "project_id", "directory", "title", "agent", "model", "cost",
         "tokens_input", "tokens_output", "tokens_reasoning", "tokens_cache_read",
@@ -341,7 +341,7 @@ def extract(
             try:
                 watermark = int(datetime.strptime(since, "%Y-%m-%d").replace(tzinfo=timezone.utc).timestamp())
             except ValueError:
-                raise ValueError("date Kilo invalide; format attendu: AAAA-MM-JJ")
+                raise ValueError("invalid Kilo date; expected format: YYYY-MM-DD")
             merged = {}
         else:
             state = _load_json(state_path, {"last_time_updated": 0})
@@ -378,7 +378,7 @@ def extract(
             "new_sessions": len(new_rows),
         }
     except (KiloSchemaError, sqlite3.Error, OSError, ValueError) as exc:
-        logger.error("Kilo indisponible: %s", exc)
+        logger.error("Kilo unavailable: %s", exc)
         return {"status": "error", "source": SOURCE, "db_path": db_path, "error": str(exc), "sessions": [], "schema": {}}
 
 
@@ -418,12 +418,12 @@ def _save_json(path: str, data: Any) -> None:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Extraction Kilo/KiloCode read-only pour OpenCost")
-    parser.add_argument("--db", default=default_db_path(), help="chemin vers kilo.db")
-    parser.add_argument("--full", action="store_true", help="re-extraction complete")
-    parser.add_argument("--since", help="extraction depuis une date AAAA-MM-JJ")
-    parser.add_argument("--out-dataset", default=resources.dataset_path(), help="dataset de sortie")
-    parser.add_argument("--state", default=KILO_STATE_PATH, help="etat de synchronisation")
+    parser = argparse.ArgumentParser(description="Read-only Kilo/KiloCode extraction for AgentLedger")
+    parser.add_argument("--db", default=default_db_path(), help="path to kilo.db")
+    parser.add_argument("--full", action="store_true", help="full re-extraction")
+    parser.add_argument("--since", help="extract from a YYYY-MM-DD date")
+    parser.add_argument("--out-dataset", default=resources.dataset_path(), help="output dataset file")
+    parser.add_argument("--state", default=KILO_STATE_PATH, help="sync state file")
     args = parser.parse_args()
     result = extract(args, args.out_dataset, args.state)
     print(json.dumps(result, ensure_ascii=False, indent=1))
