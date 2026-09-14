@@ -23,7 +23,7 @@ fails the build if a used key is missing in either language.
 
 | Tab (`view=`) | Contents |
 |---|---|
-| `overview` (default) | KPIs, trio row (anomalies + cost/session histogram + cache & errors sharing 100%), cost/tokens per day charts, 30-day forecast, budgets grid |
+| `overview` (default) | KPIs (Costs + Tokens groups, 14d sparklines with min/max tooltips), trio row (anomalies + cost/session histogram + cache & errors sharing 100%), cost/tokens per day charts, 30-day forecast, budgets grid |
 | `modeles` | Cost-by-model donut, multi-model comparison card, cost customization panel (`pricing.json`) |
 | `projets` | Cost by agent, cost by team, budgets editing panel (`budgets.json`) |
 | `sessions` | Natural-language search (NLQ) + full-width detail table with CSV/JSON exports |
@@ -35,6 +35,8 @@ and are resized when their tab activates).
 ## Filter bar
 
 `#filterbar` sticks under the header (`position: sticky`).
+Its `top` offset is computed in JS (`updateFilterbarOffset()`, header
+height + 8px, refreshed on resize) so wrapped headers never overlap it.
 Always-visible compact row: **From/To** range, **title search**,
 **Source**, **＋/－ Filters** button, **Reset**.
 The `#filters-panel` (collapsed by default) holds the detail: multi-model,
@@ -60,6 +62,12 @@ JS functions: `openDrawer(sessionId)`, `closeDrawer()`.
   (`model` → Models, `agent`/`team` → Projects, `day` → dates).
 - **Zoom**: clicking a chart area opens the enlarged overlay; ⬇ exports the
   chart as PNG.
+- **Theme-aware charts**: `chartColors()` reads the active theme and
+  `refreshChartTheme()` rebuilds tooltip/tick/grid colors on every `render()`
+  (theme toggle re-renders, so no stale dark styling in light mode).
+- **Empty states**: shared `emptyState()` helper (KPIs, table).
+- **Numbers**: `fmtInt()` follows the UI language (`fr-FR` / `en-US`).
+- **Table**: first column sticky-left inside `.tab-scroll` for small screens.
 - **Live pricing/budgets**: live typing with `localStorage` draft,
   `pricing.json` / `budgets.json` export to copy into `config/` then
   `python extract.py --full && python build_report.py` to persist.

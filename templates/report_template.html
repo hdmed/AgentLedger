@@ -38,6 +38,10 @@ select:focus-visible,input:focus-visible{outline:2px solid var(--acc);outline-of
 .kpi{transition:transform .15s}
 .kpi:hover{transform:translateY(-2px)}
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:18px}
+.kpi-group{font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.5px;margin:16px 0 8px}
+.kpi-group:first-child{margin-top:0}
+.empty{text-align:center;color:var(--mut);padding:18px;font-size:13px}
+.sub{font-size:12px;color:var(--mut)}
 .kpi{background:linear-gradient(135deg, var(--panel) 0%, var(--panel2) 100%);border:1px solid var(--line);border-radius:12px;padding:14px 16px;position:relative;overflow:hidden}
 .kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg, var(--acc), var(--ok));opacity:.7}
 .kpi .v{font-size:22px;font-weight:700;margin-top:4px}
@@ -60,7 +64,7 @@ select:focus-visible,input:focus-visible{outline:2px solid var(--acc);outline-of
 .chart .canvas-wrap{flex:1;min-height:0;position:relative}
 .chart .canvas-wrap canvas{position:absolute;inset:0;width:100%!important;height:100%!important}
 .chart-full{grid-column:1/-1;height:min(340px,70vh)}
-.trio{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:12px}
+.trio{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:12px;align-items:start}
 .trio>.chart{height:min(300px,60vh)}
 .trio>.card{margin:0;overflow:auto;max-height:min(300px,60vh)}
 @media (max-width:1100px){.trio{grid-template-columns:1fr}.trio>.card{max-height:none}}
@@ -77,6 +81,10 @@ details.card{padding-top:10px}
 details summary{cursor:pointer;font-weight:600;color:var(--acc)}
 .pricing-rows{display:grid;gap:8px;margin-top:12px}
 .prow{display:grid;grid-template-columns:1.6fr repeat(5,1fr) .5fr;gap:8px;align-items:center}
+.brow3{grid-template-columns:1.6fr 1fr .5fr}
+@media (max-width:1250px){#filterbar-quick{grid-template-columns:1fr 1fr 1fr}}
+@media (max-width:700px){.prow,.brow3{grid-template-columns:1fr 1fr}.prow .mid{grid-column:1/-1}}
+.tab-scroll td:first-child,.tab-scroll th:first-child{position:sticky;left:0;background:var(--panel2);z-index:1}
 .prow .mid{font-weight:600;font-size:12px}
 .prow label{font-size:10px;color:var(--mut)}
 .prow input{font-size:12px;padding:6px}
@@ -111,6 +119,8 @@ tr:hover{background:var(--panel2)}
   .kpis{grid-template-columns:repeat(3,1fr)}
   .charts{grid-template-columns:repeat(2,1fr)}
   .trio{grid-template-columns:repeat(3,1fr)}
+  .trio>.chart{height:260px}
+  .trio>.card{max-height:none;overflow:visible}
   @page{margin:12mm}
 }
 .compare-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:12px}
@@ -158,7 +168,7 @@ tr:hover{background:var(--panel2)}
     <button class="tab-btn" data-view="sessions" role="tab" aria-selected="false" data-i18n="tab_sessions">📋 Sessions</button>
   </nav>
   <span class="sub" id="meta-sub"></span>
-  <button class="fbtn" id="theme-toggle" data-i18n-title="theme_title" title="Light/dark theme">🌓</button>
+  <button class="fbtn" id="theme-toggle" data-i18n-title="theme_title" title="Light/dark theme" data-i18n-aria="theme_toggle" aria-label="Toggle theme">🌓</button>
   <button class="fbtn" id="share-link" data-i18n-title="share_title" title="Copy filtered link" data-i18n="share">🔗 Share</button>
   <button class="fbtn" id="print-btn" data-i18n-title="print_title" title="Print / PDF" data-i18n="print_btn">🖨️ Print</button>
   <button class="fbtn" id="lang-toggle" title="Language / Langue">FR</button>
@@ -190,22 +200,22 @@ tr:hover{background:var(--panel2)}
   </div>
 
   <section class="view active" id="view-overview" role="tabpanel" data-i18n-aria="view_overview" aria-label="Overview">
-  <div class="kpis" id="kpis" aria-live="polite"></div>
+  <div id="kpis" aria-live="polite"></div>
   <div class="budget-grid" id="budget-grid"></div>
   <div class="trio" id="trio">
   <div class="card" id="anomaly-card" style="display:none"><h3><span data-i18n="ch_anomalies">Anomalies detected</span> <span class="tag" id="anomaly-count"></span></h3><div id="anomaly-list" class="small"></div></div>
-    <div class="chart" data-chart="c-cost-hist"><div class="chart-head"><h3 data-i18n="ch_hist">Cost / session histogram</h3><div class="chart-tools"><button class="icon-btn" data-zoom="c-cost-hist" data-i18n-title="zoom_btn" title="Zoom">⛶</button><button class="icon-btn" data-png="c-cost-hist" data-i18n-title="png_btn" title="PNG">⬇</button></div></div><div class="canvas-wrap"><canvas id="c-cost-hist"></canvas></div></div>
-    <div class="chart" data-chart="c-cache"><div class="chart-head"><h3 data-i18n="ch_cache">Cache & errors</h3><div class="chart-tools"><button class="icon-btn" data-zoom="c-cache" data-i18n-title="zoom_btn" title="Zoom">⛶</button><button class="icon-btn" data-png="c-cache" data-i18n-title="png_btn" title="PNG">⬇</button></div></div><div class="canvas-wrap"><canvas id="c-cache"></canvas></div></div>
+    <div class="chart" data-chart="c-cost-hist"><div class="chart-head"><h3 data-i18n="ch_hist">Cost / session histogram</h3><div class="chart-tools"><button class="icon-btn" data-zoom="c-cost-hist" data-i18n-title="zoom_btn" title="Zoom" data-i18n-aria="zoom_btn" aria-label="Zoom">⛶</button><button class="icon-btn" data-png="c-cost-hist" data-i18n-title="png_btn" title="PNG" data-i18n-aria="png_btn" aria-label="PNG">⬇</button></div></div><div class="canvas-wrap"><canvas id="c-cost-hist"></canvas></div></div>
+    <div class="chart" data-chart="c-cache"><div class="chart-head"><h3 data-i18n="ch_cache">Cache & errors</h3><div class="chart-tools"><button class="icon-btn" data-zoom="c-cache" data-i18n-title="zoom_btn" title="Zoom" data-i18n-aria="zoom_btn" aria-label="Zoom">⛶</button><button class="icon-btn" data-png="c-cache" data-i18n-title="png_btn" title="PNG" data-i18n-aria="png_btn" aria-label="PNG">⬇</button></div></div><div class="canvas-wrap"><canvas id="c-cache"></canvas></div></div>
   </div>
   <div class="charts" id="charts">
-    <div class="chart chart-full" data-chart="c-forecast"><div class="chart-head"><h3 data-i18n="ch_forecast">30-day cost forecast</h3><div class="chart-tools"><button class="icon-btn" data-zoom="c-forecast" data-i18n-title="zoom_btn" title="Zoom">⛶</button><button class="icon-btn" data-png="c-forecast" data-i18n-title="png_btn" title="PNG">⬇</button></div></div><div class="canvas-wrap"><canvas id="c-forecast"></canvas></div></div>
-    <div class="chart chart-full" data-chart="c-cost-day"><div class="chart-head"><h3 data-i18n="ch_cost_day">Cost per day (by model)</h3><div class="chart-tools"><button class="icon-btn" data-zoom="c-cost-day" data-i18n-title="zoom_btn" title="Zoom">⛶</button><button class="icon-btn" data-png="c-cost-day" data-i18n-title="png_btn" title="PNG">⬇</button></div></div><div class="canvas-wrap"><canvas id="c-cost-day"></canvas></div></div>
-    <div class="chart chart-full" data-chart="c-tok-day"><div class="chart-head"><h3 data-i18n="ch_tok_day">Tokens per day (by model)</h3><div class="chart-tools"><button class="icon-btn" data-zoom="c-tok-day" data-i18n-title="zoom_btn" title="Zoom">⛶</button><button class="icon-btn" data-png="c-tok-day" data-i18n-title="png_btn" title="PNG">⬇</button></div></div><div class="canvas-wrap"><canvas id="c-tok-day"></canvas></div></div>
+    <div class="chart chart-full" data-chart="c-forecast"><div class="chart-head"><h3 data-i18n="ch_forecast">30-day cost forecast</h3><div class="chart-tools"><button class="icon-btn" data-zoom="c-forecast" data-i18n-title="zoom_btn" title="Zoom" data-i18n-aria="zoom_btn" aria-label="Zoom">⛶</button><button class="icon-btn" data-png="c-forecast" data-i18n-title="png_btn" title="PNG" data-i18n-aria="png_btn" aria-label="PNG">⬇</button></div></div><div class="canvas-wrap"><canvas id="c-forecast"></canvas></div></div>
+    <div class="chart chart-full" data-chart="c-cost-day"><div class="chart-head"><h3 data-i18n="ch_cost_day">Cost per day (by model)</h3><div class="chart-tools"><button class="icon-btn" data-zoom="c-cost-day" data-i18n-title="zoom_btn" title="Zoom" data-i18n-aria="zoom_btn" aria-label="Zoom">⛶</button><button class="icon-btn" data-png="c-cost-day" data-i18n-title="png_btn" title="PNG" data-i18n-aria="png_btn" aria-label="PNG">⬇</button></div></div><div class="canvas-wrap"><canvas id="c-cost-day"></canvas></div></div>
+    <div class="chart chart-full" data-chart="c-tok-day"><div class="chart-head"><h3 data-i18n="ch_tok_day">Tokens per day (by model)</h3><div class="chart-tools"><button class="icon-btn" data-zoom="c-tok-day" data-i18n-title="zoom_btn" title="Zoom" data-i18n-aria="zoom_btn" aria-label="Zoom">⛶</button><button class="icon-btn" data-png="c-tok-day" data-i18n-title="png_btn" title="PNG" data-i18n-aria="png_btn" aria-label="PNG">⬇</button></div></div><div class="canvas-wrap"><canvas id="c-tok-day"></canvas></div></div>
   </div>
   </section>
   <section class="view" id="view-modeles" role="tabpanel" data-i18n-aria="view_models" aria-label="Models">
   <div class="charts">
-    <div class="chart" data-chart="c-cost-model"><div class="chart-head"><h3 data-i18n="ch_cost_model">Cost by model</h3><div class="chart-tools"><button class="icon-btn" data-zoom="c-cost-model" data-i18n-title="zoom_btn" title="Zoom">⛶</button><button class="icon-btn" data-png="c-cost-model" data-i18n-title="png_btn" title="PNG">⬇</button></div></div><div class="canvas-wrap"><canvas id="c-cost-model"></canvas></div></div>
+    <div class="chart" data-chart="c-cost-model"><div class="chart-head"><h3 data-i18n="ch_cost_model">Cost by model</h3><div class="chart-tools"><button class="icon-btn" data-zoom="c-cost-model" data-i18n-title="zoom_btn" title="Zoom" data-i18n-aria="zoom_btn" aria-label="Zoom">⛶</button><button class="icon-btn" data-png="c-cost-model" data-i18n-title="png_btn" title="PNG" data-i18n-aria="png_btn" aria-label="PNG">⬇</button></div></div><div class="canvas-wrap"><canvas id="c-cost-model"></canvas></div></div>
   </div>
   <div class="card" id="compare-card" style="display:none"><h3 data-i18n="compare_title">Model comparison (multiple selection)</h3><div class="compare-grid" id="compare-grid"></div><div class="canvas-wrap" style="height:260px;position:relative;margin-top:12px"><canvas id="c-compare"></canvas></div></div>
 
@@ -223,8 +233,8 @@ tr:hover{background:var(--panel2)}
   </section>
   <section class="view" id="view-projets" role="tabpanel" data-i18n-aria="view_projects" aria-label="Projects">
   <div class="charts">
-    <div class="chart" data-chart="c-cost-agent"><div class="chart-head"><h3 data-i18n="ch_cost_agent">Cost by agent</h3><div class="chart-tools"><button class="icon-btn" data-zoom="c-cost-agent" data-i18n-title="zoom_btn" title="Zoom">⛶</button><button class="icon-btn" data-png="c-cost-agent" data-i18n-title="png_btn" title="PNG">⬇</button></div></div><div class="canvas-wrap"><canvas id="c-cost-agent"></canvas></div></div>
-    <div class="chart" data-chart="c-cost-team"><div class="chart-head"><h3 data-i18n="ch_cost_team">Cost by team</h3><div class="chart-tools"><button class="icon-btn" data-zoom="c-cost-team" data-i18n-title="zoom_btn" title="Zoom">⛶</button><button class="icon-btn" data-png="c-cost-team" data-i18n-title="png_btn" title="PNG">⬇</button></div></div><div class="canvas-wrap"><canvas id="c-cost-team"></canvas></div></div>
+    <div class="chart" data-chart="c-cost-agent"><div class="chart-head"><h3 data-i18n="ch_cost_agent">Cost by agent</h3><div class="chart-tools"><button class="icon-btn" data-zoom="c-cost-agent" data-i18n-title="zoom_btn" title="Zoom" data-i18n-aria="zoom_btn" aria-label="Zoom">⛶</button><button class="icon-btn" data-png="c-cost-agent" data-i18n-title="png_btn" title="PNG" data-i18n-aria="png_btn" aria-label="PNG">⬇</button></div></div><div class="canvas-wrap"><canvas id="c-cost-agent"></canvas></div></div>
+    <div class="chart" data-chart="c-cost-team"><div class="chart-head"><h3 data-i18n="ch_cost_team">Cost by team</h3><div class="chart-tools"><button class="icon-btn" data-zoom="c-cost-team" data-i18n-title="zoom_btn" title="Zoom" data-i18n-aria="zoom_btn" aria-label="Zoom">⛶</button><button class="icon-btn" data-png="c-cost-team" data-i18n-title="png_btn" title="PNG" data-i18n-aria="png_btn" aria-label="PNG">⬇</button></div></div><div class="canvas-wrap"><canvas id="c-cost-team"></canvas></div></div>
   </div>
 
   <details class="card" id="budgets-edit-panel">
@@ -313,6 +323,7 @@ en:{
   tab_projects:'📁 Projects',
   tab_sessions:'📋 Sessions',
   theme_title:'Light/dark theme',
+  theme_toggle:'Toggle theme',
   share:'🔗 Share',
   share_title:'Copy filtered link',
   share_copied:'✓ Copied',
@@ -354,6 +365,8 @@ en:{
   zoom_aria:'Enlarged chart',
   drawer_title:'Session details',
   drawer_close:'✕ Close',
+  kpi_g_cost:'Costs',
+  kpi_g_tok:'Tokens',
   kpi_total:'Total cost',
   kpi_input:'Input tokens',
   kpi_output:'Output tokens',
@@ -456,6 +469,7 @@ fr:{
   tab_projects:'📁 Projets',
   tab_sessions:'📋 Sessions',
   theme_title:'Thème clair/sombre',
+  theme_toggle:'Changer de thème',
   share:'🔗 Partager',
   share_title:'Copier le lien filtré',
   share_copied:'✓ Copié',
@@ -497,6 +511,8 @@ fr:{
   zoom_aria:'Graphique agrandi',
   drawer_title:'Détails de la session',
   drawer_close:'✕ Fermer',
+  kpi_g_cost:'Coûts',
+  kpi_g_tok:'Tokens',
   kpi_total:'Coût total',
   kpi_input:'Tokens d’entrée',
   kpi_output:'Tokens de sortie',
@@ -707,10 +723,20 @@ function doDrillFilter(type, value){
 }
 
 const PALETTE = ['#6c8bff','#3ddc97','#ffc857','#ff5d73','#9b7bff','#4fd6d6','#f78fb0','#a3d128','#ff9f43','#5f9ea0','#d9539f','#7e8fe0'];
-const CHART_TOOLTIP={backgroundColor:'rgba(23,27,46,0.95)',titleColor:'#e7eaf6',bodyColor:'#cbd5e1',borderColor:'#2a3052',borderWidth:1,padding:10,cornerRadius:8,displayColors:true,titleFont:{size:12,weight:'600'},bodyFont:{size:11}};
+let CHART_TOOLTIP={backgroundColor:'rgba(23,27,46,0.95)',titleColor:'#e7eaf6',bodyColor:'#cbd5e1',borderColor:'#2a3052',borderWidth:1,padding:10,cornerRadius:8,displayColors:true,titleFont:{size:12,weight:'600'},bodyFont:{size:11}};
 const CHART_ANIM={duration:700,easing:'easeOutQuart'};
+function chartColors(){
+  const light=document.documentElement.getAttribute('data-theme')==='light';
+  return light
+    ? {tick:'#4b5563',grid:'rgba(30,41,82,0.14)',gridSoft:'rgba(30,41,82,0.08)',border:'#ffffff',tipBg:'rgba(255,255,255,0.97)',tipTitle:'#1a1f3d',tipBody:'#374151',tipBorder:'#d6dcff'}
+    : {tick:'#8b92b5',grid:'rgba(42,48,82,0.3)',gridSoft:'rgba(42,48,82,0.2)',border:'#171b2e',tipBg:'rgba(23,27,46,0.95)',tipTitle:'#e7eaf6',tipBody:'#cbd5e1',tipBorder:'#2a3052'};
+}
+function refreshChartTheme(){
+  const CC=chartColors();
+  CHART_TOOLTIP={backgroundColor:CC.tipBg,titleColor:CC.tipTitle,bodyColor:CC.tipBody,borderColor:CC.tipBorder,borderWidth:1,padding:10,cornerRadius:8,displayColors:true,titleFont:{size:12,weight:'600'},bodyFont:{size:11}};
+}
 
-function fmtInt(n){ return Number(n||0).toLocaleString('fr-FR'); }
+function fmtInt(n){ return Number(n||0).toLocaleString(LANG==='fr'?'fr-FR':'en-US'); }
 function fmtCost(n){
   if (n==null || isNaN(n)) return '$0';
   const abs=Math.abs(n);
@@ -722,7 +748,7 @@ function tsSec(ts){ const v=Number(ts)||0; return v>100000000000? Math.floor(v/1
 
 function initFilters(){
   if (!SESSIONS.length){
-    $('#kpis').innerHTML='<div class="kpi"><div class="l">'+t('kpi_none')+'</div><div class="v">0</div></div>';
+    $('#kpis').innerHTML='<div class="kpi">'+emptyState(t('kpi_none'))+'</div>';
     $('#f-from').value=''; $('#f-to').value='';
     return;
   }
@@ -862,19 +888,21 @@ function renderKPIs(list){
   const orig = list.reduce((a,s)=>a+Number(s.cost_original ?? s.cost ?? 0),0);
   const saving = orig - cost;
   const items=[
-    [t('kpi_total'), fmtCost(cost), list.length+' '+t('kpi_sessions_u')],
-    [t('kpi_input'), fmtInt(tin), ''],
-    [t('kpi_output'), fmtInt(tout), ''],
-    [t('kpi_cache'), fmtInt(tcach), tf('kpi_input_pct',{x:ratio.toFixed(1)})],
-    [t('kpi_reason'), fmtInt(treas), tf('kpi_output_pct',{x:reasonRatio.toFixed(1)})],
-    [t('kpi_cpm'), fmtCost(cpm), ''],
-    [t('kpi_sessions'), fmtInt(list.length), ''],
-    [t('kpi_tps'), fmtInt(tps), t('kpi_avg')],
-    [t('kpi_cpp'), fmtCost(cpp), tf('kpi_projects',{n:projN})],
-    [t('kpi_save'), fmtCost(saving), saving>0? t('kpi_vs') : ''],
+    ['cost', t('kpi_total'), fmtCost(cost), list.length+' '+t('kpi_sessions_u')],
+    ['tokens', t('kpi_input'), fmtInt(tin), ''],
+    ['tokens', t('kpi_output'), fmtInt(tout), ''],
+    ['tokens', t('kpi_cache'), fmtInt(tcach), tf('kpi_input_pct',{x:ratio.toFixed(1)})],
+    ['tokens', t('kpi_reason'), fmtInt(treas), tf('kpi_output_pct',{x:reasonRatio.toFixed(1)})],
+    ['cost', t('kpi_cpm'), fmtCost(cpm), ''],
+    ['cost', t('kpi_sessions'), fmtInt(list.length), ''],
+    ['tokens', t('kpi_tps'), fmtInt(tps), t('kpi_avg')],
+    ['cost', t('kpi_cpp'), fmtCost(cpp), tf('kpi_projects',{n:projN})],
+    ['cost', t('kpi_save'), fmtCost(saving), saving>0? t('kpi_vs') : ''],
   ];
-  $('#kpis').innerHTML = items.map(([l,v,d],i)=>
-    '<div class="kpi"><div class="l">'+l+'</div><div class="v">'+v+'</div><div class="d">'+d+'</div><div class="kpi-spark"><canvas id="spark-'+i+'" width="120" height="28"></canvas></div></div>').join('');
+  const groups=[['cost',t('kpi_g_cost')],['tokens',t('kpi_g_tok')]];
+  $('#kpis').innerHTML = groups.map(([g,gl])=>
+    '<div class="kpi-group">'+gl+'</div><div class="kpis">'+items.map(([gg,l,v,d],i)=> gg===g?
+    '<div class="kpi"><div class="l">'+l+'</div><div class="v">'+v+'</div><div class="d">'+d+'</div><div class="kpi-spark"><canvas id="spark-'+i+'" width="120" height="28"></canvas></div></div>':'').join('')+'</div>').join('');
   // sparklines 14j
   try{
     const byDay=new Map();
@@ -903,7 +931,13 @@ function renderKPIs(list){
       ctx.lineTo(w,h); ctx.lineTo(0,h); ctx.closePath(); ctx.fillStyle=col+'20'; ctx.fill();
     };
     const cols=['#6c8bff','#3ddc97','#ffc857','#ff5d73','#9b7bff','#4fd6d6','#a3d128','#5f9ea0','#d9539f'];
-    days.length && Object.entries(series).forEach(([k,arr])=> draw('spark-'+k, arr, cols[k%cols.length]));
+    days.length && Object.entries(series).forEach(([k,arr])=>{
+      draw('spark-'+k, arr, cols[k%cols.length]);
+      try{
+        const card=document.getElementById('spark-'+k)?.closest('.kpi');
+        if(card && arr.length) card.title='min '+Math.round(Math.min(...arr)*100)/100+' • max '+Math.round(Math.max(...arr)*100)/100;
+      }catch(e2){}
+    });
   }catch(e){}
 }
 function renderBudgets(list){
@@ -978,12 +1012,13 @@ function detectAnomalies(list){
   },0);
 }
 function renderForecast(list){
+  const CC=chartColors();
   // linear regression over historical cost/day -> 30d forecast
   const byDay=new Map();
   list.forEach(s=>{ const d=dayFrom(s.time_created||0); byDay.set(d,(byDay.get(d)||0)+Number(s.cost||0)); });
   const days=[...byDay.entries()].sort((a,b)=>a[0].localeCompare(b[0]));
   if(days.length<7){
-    mkChart('c-forecast', {type:'bar', data:{labels:[], datasets:[]}, options:{responsive:true, maintainAspectRatio:false, plugins:{title:{display:true,text:t('fc_empty'), color:'#8b92b5'}}}});
+    mkChart('c-forecast', {type:'bar', data:{labels:[], datasets:[]}, options:{responsive:true, maintainAspectRatio:false, plugins:{title:{display:true,text:t('fc_empty'), color:CC.tick}}}});
     return;
   }
   const vals=days.map(d=>d[1]);
@@ -1018,8 +1053,8 @@ function renderForecast(list){
     ]
   }, options:{
     responsive:true, maintainAspectRatio:false, animation:CHART_ANIM,
-    plugins:{legend:{labels:{color:'#8b92b5',font:{size:10},boxWidth:12,padding:12}}, tooltip:CHART_TOOLTIP, title:{display:true, text:tf('fc_title',{c:fmtCost(sumForecast),s:a.toFixed(4)}), color:'#8b92b5', font:{size:11}}},
-    scales:{x:{ticks:{color:'#8b92b5', maxTicksLimit:12, maxRotation:30}, grid:{color:'rgba(42,48,82,0.2)'}}, y:{ticks:{color:'#8b92b5'}, grid:{color:'rgba(42,48,82,0.3)'}}}
+    plugins:{legend:{labels:{color:CC.tick,font:{size:10},boxWidth:12,padding:12}}, tooltip:CHART_TOOLTIP, title:{display:true, text:tf('fc_title',{c:fmtCost(sumForecast),s:a.toFixed(4)}), color:CC.tick, font:{size:11}}},
+    scales:{x:{ticks:{color:CC.tick, maxTicksLimit:12, maxRotation:30}, grid:{color:CC.gridSoft}}, y:{ticks:{color:CC.tick}, grid:{color:CC.grid}}}
   }});
 }
 
@@ -1056,27 +1091,28 @@ function closeZoom(){
 }
 
 function renderCharts(list){
+  const CC=chartColors();
   // 1. cost/day
   const cd=aggDay(list);
-  let cfg = {type:'bar', data:{labels: cd.days, datasets: cd.models.map((m,i)=>({ label:m, data:cd.days.map(d=>cd.data.get(m).get(d)||0), backgroundColor:PALETTE[i%PALETTE.length], borderColor:PALETTE[i%PALETTE.length], borderWidth:1, borderRadius:3, stack:'c' }))}, options:{ responsive:true, maintainAspectRatio:false, animation:CHART_ANIM, plugins:{legend:{labels:{color:'#8b92b5',font:{size:10},boxWidth:12,padding:12}}, tooltip:CHART_TOOLTIP}, scales:{x:{stacked:true,ticks:{color:'#8b92b5',maxRotation:30},grid:{color:'rgba(42,48,82,0.3)'}},y:{stacked:true,ticks:{color:'#8b92b5'},grid:{color:'rgba(42,48,82,0.3)'}}} }};
+  let cfg = {type:'bar', data:{labels: cd.days, datasets: cd.models.map((m,i)=>({ label:m, data:cd.days.map(d=>cd.data.get(m).get(d)||0), backgroundColor:PALETTE[i%PALETTE.length], borderColor:PALETTE[i%PALETTE.length], borderWidth:1, borderRadius:3, stack:'c' }))}, options:{ responsive:true, maintainAspectRatio:false, animation:CHART_ANIM, plugins:{legend:{labels:{color:CC.tick,font:{size:10},boxWidth:12,padding:12}}, tooltip:CHART_TOOLTIP}, scales:{x:{stacked:true,ticks:{color:CC.tick,maxRotation:30},grid:{color:CC.grid}},y:{stacked:true,ticks:{color:CC.tick},grid:{color:CC.grid}}} }};
   mkChart('c-cost-day', cfg);
   if(charts['c-cost-day']){ charts['c-cost-day'].options.onClick=(e,els)=>{ if(els.length){ const idx=els[0].index; const day=cd.days[idx]; if(day){ if(e.native) e.native.stopPropagation(); doDrillFilter('day', day); } } }; charts['c-cost-day'].update(); }
 
   // 2. tokens/jour
   const td=aggTokDay(list);
-  cfg = {type:'bar', data:{labels: td.days, datasets: td.models.map((m,i)=>({ label:m, data:td.days.map(d=>td.data.get(m).get(d)||0), backgroundColor:PALETTE[i%PALETTE.length], borderColor:PALETTE[i%PALETTE.length], borderWidth:1, borderRadius:3, stack:'t' }))}, options:{ responsive:true, maintainAspectRatio:false, animation:CHART_ANIM, plugins:{legend:{labels:{color:'#8b92b5',font:{size:10},boxWidth:12,padding:12}}, tooltip:CHART_TOOLTIP}, scales:{x:{stacked:true,ticks:{color:'#8b92b5',maxRotation:30},grid:{color:'rgba(42,48,82,0.3)'}},y:{stacked:true,ticks:{color:'#8b92b5'},grid:{color:'rgba(42,48,82,0.3)'}}} }};
+  cfg = {type:'bar', data:{labels: td.days, datasets: td.models.map((m,i)=>({ label:m, data:td.days.map(d=>td.data.get(m).get(d)||0), backgroundColor:PALETTE[i%PALETTE.length], borderColor:PALETTE[i%PALETTE.length], borderWidth:1, borderRadius:3, stack:'t' }))}, options:{ responsive:true, maintainAspectRatio:false, animation:CHART_ANIM, plugins:{legend:{labels:{color:CC.tick,font:{size:10},boxWidth:12,padding:12}}, tooltip:CHART_TOOLTIP}, scales:{x:{stacked:true,ticks:{color:CC.tick,maxRotation:30},grid:{color:CC.grid}},y:{stacked:true,ticks:{color:CC.tick},grid:{color:CC.grid}}} }};
   mkChart('c-tok-day', cfg);
   if(charts['c-tok-day']){ charts['c-tok-day'].options.onClick=(e,els)=>{ if(els.length){ const idx=els[0].index; const day=td.days[idx]; if(day){ if(e.native) e.native.stopPropagation(); doDrillFilter('day', day); } } }; charts['c-tok-day'].update(); }
 
   // 3. cost/model donut
   const cm=sumBy(list,'model_label');
-  cfg = {type:'doughnut', data:{labels: cm.map(e=>e[0]), datasets:[{ data:cm.map(e=>e[1]), backgroundColor:PALETTE, borderColor:'#171b2e', borderWidth:2, hoverOffset:6 }]}, options:{ responsive:true, maintainAspectRatio:false, animation:CHART_ANIM, cutout:'58%', plugins:{legend:{position:'right',labels:{color:'#8b92b5',font:{size:10},padding:10,boxWidth:12}}, tooltip:{...CHART_TOOLTIP, callbacks:{label:(c)=>' '+c.label+': '+fmtCost(c.parsed)}} }}};
+  cfg = {type:'doughnut', data:{labels: cm.map(e=>e[0]), datasets:[{ data:cm.map(e=>e[1]), backgroundColor:PALETTE, borderColor:CC.border, borderWidth:2, hoverOffset:6 }]}, options:{ responsive:true, maintainAspectRatio:false, animation:CHART_ANIM, cutout:'58%', plugins:{legend:{position:'right',labels:{color:CC.tick,font:{size:10},padding:10,boxWidth:12}}, tooltip:{...CHART_TOOLTIP, callbacks:{label:(c)=>' '+c.label+': '+fmtCost(c.parsed)}} }}};
   mkChart('c-cost-model', cfg);
   if(charts['c-cost-model']){ charts['c-cost-model'].options.onClick=(e,els)=>{ if(els.length){ const i=els[0].index; const lbl=cm[i]&&cm[i][0]; if(lbl) doDrillFilter('model', lbl); } }; charts['c-cost-model'].update(); }
 
   // 4. cost/agent bar
   const ca=sumBy(list,'agent');
-  cfg = {type:'bar', data:{labels: ca.map(e=>e[0]), datasets:[{ data:ca.map(e=>e[1]), backgroundColor:PALETTE, borderColor:PALETTE, borderWidth:1, borderRadius:4 }]}, options:{ responsive:true, maintainAspectRatio:false, animation:CHART_ANIM, plugins:{legend:{display:false}, tooltip:CHART_TOOLTIP}, scales:{y:{ticks:{color:'#8b92b5'},grid:{color:'rgba(42,48,82,0.3)'}},x:{ticks:{color:'#8b92b5'},grid:{display:false}}} }};
+  cfg = {type:'bar', data:{labels: ca.map(e=>e[0]), datasets:[{ data:ca.map(e=>e[1]), backgroundColor:PALETTE, borderColor:PALETTE, borderWidth:1, borderRadius:4 }]}, options:{ responsive:true, maintainAspectRatio:false, animation:CHART_ANIM, plugins:{legend:{display:false}, tooltip:CHART_TOOLTIP}, scales:{y:{ticks:{color:CC.tick},grid:{color:CC.grid}},x:{ticks:{color:CC.tick},grid:{display:false}}} }};
   mkChart('c-cost-agent', cfg);
   if(charts['c-cost-agent']){ charts['c-cost-agent'].options.onClick=(e,els)=>{ if(els.length){ const i=els[0].index; const lbl=ca[i]&&ca[i][0]; if(lbl) doDrillFilter('agent', lbl); } }; charts['c-cost-agent'].update(); }
 
@@ -1085,7 +1121,7 @@ function renderCharts(list){
   const buckets={};
   cos.forEach(c=>{ const k=Math.max(1,Math.min(10,Math.ceil(Math.log10(c+1)))); buckets[k]=(buckets[k]||0)+1; });
   const ordered=[...Object.keys(buckets)].map(Number).sort((a,b)=>a-b);
-  cfg = {type:'bar', data:{labels: ordered.map(k=>k===1?'>0.01':('<1e'+k)), datasets:[{ data:ordered.map(k=>buckets[k]), backgroundColor:'#6c8bff', borderColor:'#6c8bff', borderWidth:1, borderRadius:4 }]}, options:{ responsive:true, maintainAspectRatio:false, animation:CHART_ANIM, plugins:{legend:{display:false}, tooltip:CHART_TOOLTIP}, scales:{y:{ticks:{color:'#8b92b5'},grid:{color:'rgba(42,48,82,0.3)'}},x:{ticks:{color:'#8b92b5'},grid:{display:false}}} }};
+  cfg = {type:'bar', data:{labels: ordered.map(k=>k===1?'>0.01':('<1e'+k)), datasets:[{ data:ordered.map(k=>buckets[k]), backgroundColor:'#6c8bff', borderColor:'#6c8bff', borderWidth:1, borderRadius:4 }]}, options:{ responsive:true, maintainAspectRatio:false, animation:CHART_ANIM, plugins:{legend:{display:false}, tooltip:CHART_TOOLTIP}, scales:{y:{ticks:{color:CC.tick},grid:{color:CC.grid}},x:{ticks:{color:CC.tick},grid:{display:false}}} }};
   mkChart('c-cost-hist', cfg);
 
   // 6. cache/errors: cache read vs input + errors
@@ -1093,7 +1129,7 @@ function renderCharts(list){
   const tin=list.reduce((a,s)=>a+Number(s.tokens_input||0),0);
   const saw=list.length;
   const errs=list.filter(s=>s.error).length;
-  cfg = {type:'doughnut', data:{labels:[t('kpi_cache'),t('cache_uncached')], datasets:[{ data:[tcr, Math.max(0,tin)], backgroundColor:[PALETTE[0],PALETTE[2]], borderColor:'#171b2e', borderWidth:2, hoverOffset:6 }]}, options:{ responsive:true, maintainAspectRatio:false, animation:CHART_ANIM, cutout:'58%', plugins:{legend:{position:'right',labels:{color:'#8b92b5',font:{size:10},padding:10,boxWidth:12}}, tooltip:{...CHART_TOOLTIP, callbacks:{label:(c)=>' '+c.label+': '+fmtInt(c.parsed)+' tok'}}} }};
+  cfg = {type:'doughnut', data:{labels:[t('kpi_cache'),t('cache_uncached')], datasets:[{ data:[tcr, Math.max(0,tin)], backgroundColor:[PALETTE[0],PALETTE[2]], borderColor:CC.border, borderWidth:2, hoverOffset:6 }]}, options:{ responsive:true, maintainAspectRatio:false, animation:CHART_ANIM, cutout:'58%', plugins:{legend:{position:'right',labels:{color:CC.tick,font:{size:10},padding:10,boxWidth:12}}, tooltip:{...CHART_TOOLTIP, callbacks:{label:(c)=>' '+c.label+': '+fmtInt(c.parsed)+' tok'}}} }};
   mkChart('c-cache', cfg);
 
   // 7. 30d forecast
@@ -1101,7 +1137,7 @@ function renderCharts(list){
 
   // 8. cost by team
   const cteam=[...list.reduce((m,s)=>{ const k=getTeam(s); m.set(k,(m.get(k)||0)+Number(s.cost||0)); return m; }, new Map()).entries()].sort((a,b)=>b[1]-a[1]);
-  cfg = {type:'bar', data:{labels: cteam.map(e=>e[0]), datasets:[{ data:cteam.map(e=>e[1]), backgroundColor:PALETTE, borderColor:PALETTE, borderWidth:1, borderRadius:4 }]}, options:{ responsive:true, maintainAspectRatio:false, animation:CHART_ANIM, plugins:{legend:{display:false}, tooltip:CHART_TOOLTIP}, scales:{y:{ticks:{color:'#8b92b5'},grid:{color:'rgba(42,48,82,0.3)'}},x:{ticks:{color:'#8b92b5'},grid:{display:false}}} }};
+  cfg = {type:'bar', data:{labels: cteam.map(e=>e[0]), datasets:[{ data:cteam.map(e=>e[1]), backgroundColor:PALETTE, borderColor:PALETTE, borderWidth:1, borderRadius:4 }]}, options:{ responsive:true, maintainAspectRatio:false, animation:CHART_ANIM, plugins:{legend:{display:false}, tooltip:CHART_TOOLTIP}, scales:{y:{ticks:{color:CC.tick},grid:{color:CC.grid}},x:{ticks:{color:CC.tick},grid:{display:false}}} }};
   mkChart('c-cost-team', cfg);
   if(charts['c-cost-team']){ charts['c-cost-team'].options.onClick=(e,els)=>{ if(els.length){ const i=els[0].index; const lbl=cteam[i]&&cteam[i][0]; if(lbl) doDrillFilter('team', lbl); } }; charts['c-cost-team'].update(); }
 }
@@ -1134,7 +1170,7 @@ function renderTable(list){
     '<td>'+fmtInt(s.tokens_cache_write)+'</td>'+
     '<td>'+(s.cost_source==='pricing' || String(s.cost_source||'').startsWith('pricing')? '<span class="pos">'+t('cost_custom')+'</span>' : '<span class="neg">'+escapeHtml(s.cost_source||s.source||'opencode')+'</span>')+'</td>'+
     '<td><button class="fbtn" data-note="'+s.id+'" title="'+escapeHtml(note||t('note_add'))+'">'+(note?'📝':'🗒️')+'</button></td></tr>';
-  }).join('') || '<tr><td colspan="99" style="text-align:center;color:var(--mut)">'+t('t_noresults')+'</td></tr>';
+  }).join('') || '<tr><td colspan="99">'+emptyState(t('t_noresults'))+'</td></tr>';
   document.querySelectorAll('[data-note]').forEach(b=>{
     b.addEventListener('click', ()=>{
       const id=b.dataset.note;
@@ -1153,7 +1189,9 @@ function renderTable(list){
   }
 }
 function escapeHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function emptyState(msg){ return '<div class="empty">'+msg+'</div>'; }
 function renderCompare(list){
+  const CC=chartColors();
   const card=document.getElementById('compare-card');
   const grid=document.getElementById('compare-grid');
   if(!card||!grid){ return; }
@@ -1179,11 +1217,12 @@ function renderCompare(list){
     if(byDay.has(m)) byDay.get(m).set(d, (byDay.get(m).get(d)||0)+Number(s.cost||0));
   });
   const datasets=sel.map((m,i)=>({ label:m, data:days.map(d=>byDay.get(m).get(d)||0), borderColor:PALETTE[i%PALETTE.length], backgroundColor:'transparent', tension:0.2, pointRadius:2, borderWidth:2 }));
-  const cfg={type:'line', data:{labels:days, datasets}, options:{ responsive:true, maintainAspectRatio:false, animation:CHART_ANIM, interaction:{mode:'index', intersect:false}, plugins:{legend:{labels:{color:'#8b92b5',font:{size:10}}}, tooltip:CHART_TOOLTIP}, scales:{x:{ticks:{color:'#8b92b5',maxTicksLimit:10},grid:{color:'rgba(42,48,82,0.2)'}},y:{ticks:{color:'#8b92b5'},grid:{color:'rgba(42,48,82,0.2)'}}} }};
+  const cfg={type:'line', data:{labels:days, datasets}, options:{ responsive:true, maintainAspectRatio:false, animation:CHART_ANIM, interaction:{mode:'index', intersect:false}, plugins:{legend:{labels:{color:CC.tick,font:{size:10}}}, tooltip:CHART_TOOLTIP}, scales:{x:{ticks:{color:CC.tick,maxTicksLimit:10},grid:{color:CC.gridSoft}},y:{ticks:{color:CC.tick},grid:{color:CC.gridSoft}}} }};
   mkChart('c-compare', cfg);
 }
 
 function render(){
+  refreshChartTheme();
   const base=filtered();
   const list=withLiveCosts(base);
   state.page=0;
@@ -1314,6 +1353,15 @@ function toggleTheme(){
   const nxt=cur==='light'?'dark':'light';
   if(nxt==='dark') document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme','light');
   try{ localStorage.setItem('theme', nxt); }catch(e){}
+  updateFilterbarOffset();
+  render();
+}
+function updateFilterbarOffset(){
+  try{
+    const header=document.querySelector('header');
+    const bar=document.getElementById('filterbar');
+    if(header && bar) bar.style.top=(header.offsetHeight+8)+'px';
+  }catch(e){}
 }
 function initTheme(){
   try{
@@ -1433,14 +1481,14 @@ function buildBudgetsEditRows(){
   const models=[...new Set(SESSIONS.map(s=>s.model_label||'?'))].sort();
   const projects=[...new Set(SESSIONS.map(s=>s.project_name||'?'))].sort();
   const gVal = budgets.global?.monthly ?? '';
-  let html='<div class="prow" style="grid-template-columns:1.6fr 1fr .5fr"><div class="mid">'+t('be_global')+'</div><div><label>'+t('be_monthly')+'</label><input type="number" step="0.01" min="0" id="budget-global" value="'+gVal+'"></div><div><button class="fbtn" onclick="document.getElementById(\'budget-global\').value=\'\'; saveBudgetsDraft(); debouncedLiveRender();">'+t('pe_clear')+'</button></div></div>';
+  let html='<div class="prow brow3"><div class="mid">'+t('be_global')+'</div><div><label>'+t('be_monthly')+'</label><input type="number" step="0.01" min="0" id="budget-global" value="'+gVal+'"></div><div><button class="fbtn" onclick="document.getElementById(\'budget-global\').value=\'\'; saveBudgetsDraft(); debouncedLiveRender();">'+t('pe_clear')+'</button></div></div>';
   html+=models.map(m=>{
     const v=budgets.by_model?.[m]?.monthly ?? '';
-    return '<div class="prow brow" data-kind="model" data-key="'+escapeHtml(m)+'" style="grid-template-columns:1.6fr 1fr .5fr"><div class="mid">'+escapeHtml(m)+'</div><div><label>'+t('be_monthly')+'</label><input type="number" step="0.01" min="0" value="'+v+'"></div><div><button class="fbtn" data-bclear>'+t('pe_clear')+'</button></div></div>';
+    return '<div class="prow brow brow3" data-kind="model" data-key="'+escapeHtml(m)+'"><div class="mid">'+escapeHtml(m)+'</div><div><label>'+t('be_monthly')+'</label><input type="number" step="0.01" min="0" value="'+v+'"></div><div><button class="fbtn" data-bclear>'+t('pe_clear')+'</button></div></div>';
   }).join('');
   html+=projects.map(p=>{
     const v=budgets.by_project?.[p]?.monthly ?? '';
-    return '<div class="prow brow" data-kind="project" data-key="'+escapeHtml(p)+'" style="grid-template-columns:1.6fr 1fr .5fr"><div class="mid">'+escapeHtml(tf('be_project',{p:p}))+'</div><div><label>'+t('be_monthly')+'</label><input type="number" step="0.01" min="0" value="'+v+'"></div><div><button class="fbtn" data-bclear>'+t('pe_clear')+'</button></div></div>';
+    return '<div class="prow brow brow3" data-kind="project" data-key="'+escapeHtml(p)+'"><div class="mid">'+escapeHtml(tf('be_project',{p:p}))+'</div><div><label>'+t('be_monthly')+'</label><input type="number" step="0.01" min="0" value="'+v+'"></div><div><button class="fbtn" data-bclear>'+t('pe_clear')+'</button></div></div>';
   }).join('');
   const cont=document.getElementById('budgets-edit-rows');
   if(!cont) return;
@@ -1486,6 +1534,8 @@ function initMeta(){
 
 function initApp(){
   applyI18n();
+  updateFilterbarOffset();
+  window.addEventListener('resize', debounce(updateFilterbarOffset,150));
   initFilters();
   buildPricingRows();
   buildBudgetsEditRows();
