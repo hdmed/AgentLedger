@@ -26,9 +26,9 @@ watch:
 open:
 	$(PYTHON) -c "import os,webbrowser; webbrowser.open('file:///'+os.path.abspath('dist/report.html'))"
 
-# Validate the template inline JS (dataset placeholder substituted)
+# Validate the template inline JS (dataset + locales placeholders substituted)
 check-js:
-	$(PYTHON) -c "import re; h=open('templates/report_template.html',encoding='utf-8').read().replace('/*__DATASET__*/','{}'); open('__tpl_check.js','w',encoding='utf-8').write('\n'.join(re.findall(r'<script>(.*?)</script>',h,re.S)))"
+	$(PYTHON) -c "import re; h=open('templates/report_template.html',encoding='utf-8').read().replace('/*__DATASET__*/','{}').replace('/*__LOCALES__*/','{}'); open('__tpl_check.js','w',encoding='utf-8').write('\n'.join(re.findall(r'<script>(.*?)</script>',h,re.S)))"
 	node --check __tpl_check.js
 	$(PYTHON) -c "import os; os.remove('__tpl_check.js')"
 

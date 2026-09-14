@@ -274,21 +274,30 @@ def extract(
     since = getattr(args, "since", None)
 
     if full:
-        merged = {}
         watermark = 0
     elif since:
         try:
             dt = datetime.strptime(since, "%Y-%m-%d").replace(tzinfo=timezone.utc)
             watermark = int(dt.timestamp())
-            merged = {}
         except ValueError:
             logger.error("Invalid date for --since: {}. Expected format: YYYY-MM-DD".format(since))
             sys.exit(1)
     else:
         state = load_state(state_path)
         watermark = int(state.get("last_time_updated", 0))
-        prev = load_json(dataset_path, {"sessions": []})
-        merged = {s["id"]: s for s in prev.get("sessions", [])}
+
+    # Foreign-source sessions (kilo/autoclaw/workbuddy, merged by the
+    # launcher) are owned by their connectors: the OpenCode extractor
+    # carries them over untouched instead of dropping them.
+    prev = load_json(dataset_path, {"sessions": []})
+    foreign_by_key = {}
+    for s in prev.get("sessions", []):
+        if s.get("source", "opencode") != "opencode":
+            foreign_by_key[(s.get("source"), s.get("source_session_id", s.get("id")))] = s
+    merged = {s["id"]: s for s in prev.get("sessions", [])
+              if s.get("source", "opencode") == "opencode"}
+    if full or since:
+        merged = {}
 
     logger.info("source: {}".format(db_path))
     started = time.time()
@@ -306,7 +315,7 @@ def extract(
     for r in new_rows:
         merged[r["id"]] = r
 
-    sessions = list(merged.values())
+    sessions = list(merged.values()) + list(foreign_by_key.values())
     for s in sessions:
         s.setdefault("source", "opencode")
         s.setdefault("source_session_id", s.get("id"))

@@ -10,7 +10,7 @@
 
 **AgentLedger** tracks AI agent usage and cost locally — no cloud, no account,
 no network calls. It reads agent databases **read-only** and builds a single
-offline HTML dashboard with tabs, charts, budgets and CSV/JSON exports, in English and French (header toggle).
+offline HTML dashboard with tabs, charts, budgets and CSV/JSON exports, in 10 languages (EN, FR, ES, PT, ZH, HI, AR, BN, RU, ID via header selector).
 
 Supported sources (additive merge, dedup key `(source, source_session_id)`):
 

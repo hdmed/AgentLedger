@@ -37,5 +37,8 @@
 - CI uses Python 3.11 (Linux + Windows): `py_compile`, all `unittest` tests, then `python build_report.py --strict` (creating a dummy dataset only when the ignored dataset is absent); Windows CI additionally builds the EXE and smoke-tests `--version`/`--diagnose`.
 - Use `--strict` when verifying that the vendored Chart.js asset is present.
 - Validate template JS changes with `make check-js` (`node --check` on the
-  extracted script with the `/*__DATASET__*/` placeholder substituted —
-  a raw check fails on the placeholder by design).
+  extracted script with the `/*__DATASET__*/` and `/*__LOCALES__*/`
+  placeholders substituted — raw checks fail on the placeholders by design).
+- UI strings live in `locales/*.json` (injected by `build_report.py`);
+  never hardcode user-facing text in the template — use `t()`/`tf()` or
+  `data-i18n*` so `tests/test_i18n.py` stays green.

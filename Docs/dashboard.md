@@ -11,19 +11,25 @@ Navigation uses header buttons (`role="tablist"`).
 The active view persists in the URL (`?view=...`) and is therefore shareable
 via "🔗 Share". Without a parameter, the overview shows.
 
-## Language (EN/FR)
+## Language (10 locales)
 
-The header `FR`/`EN` button (`#lang-toggle`) switches the whole UI between
-English and French. Choice persists in `localStorage` (`agentledger_lang`),
-can be forced via `?lang=fr|en`, and is included in shared links. Default:
-URL param, then saved choice, then browser language. Implementation:
-`I18N` dict + `t(k)` / `tf(k, params)` in the template; static text uses
-`data-i18n` (plus `-html`/`-ph`/`-title`/`-aria` variants). `tests/test_i18n.py`
-fails the build if a used key is missing in either language.
+The header language selector (`#lang-select`) switches the whole UI between
+English, French, Spanish, Portuguese, Simplified Chinese, Hindi, Arabic
+(RTL), Bengali, Russian and Indonesian. Choice persists in `localStorage`
+(`agentledger_lang`), can be forced via `?lang=xx`, and is included in shared
+links. Default: URL param, then saved choice, then browser language prefix.
+Arabic sets `document.dir=rtl` (drawer/table mirrored). Numbers follow the
+locale (`fmtInt()` map). Implementation: source strings in `locales/*.json`,
+inlined by `build_report.py` (`/*__LOCALES__*/`) so the HTML stays a single
+offline file; template code uses `t(k)` / `tf(k, params)` and static text uses
+`data-i18n` (plus `-html`/`-ph`/`-title`/`-aria` variants). See
+[Contributing](../CONTRIBUTING.md#translating) to fix or add a language.
+`tests/test_i18n.py` fails the build if a used key is missing in any
+language, if locales diverge, or if a locale block is nested instead of closed.
 
 | Tab (`view=`) | Contents |
 |---|---|
-| `overview` (default) | KPIs (Costs + Tokens groups, 14d sparklines with min/max tooltips), trio row (anomalies + cost/session histogram + cache & errors sharing 100%), cost/tokens per day charts, 30-day forecast, budgets grid |
+| `overview` (default) | KPIs (Costs + Tokens groups, 14d sparklines with min/max tooltips), trio row (anomalies + cost/session histogram + cache & errors sharing 100%), models trio row (tokens / requests / cost per model), cost/tokens per day charts, 30-day forecast, budgets grid |
 | `modeles` | Cost-by-model donut, multi-model comparison card, cost customization panel (`pricing.json`) |
 | `projets` | Cost by agent, cost by team, budgets editing panel (`budgets.json`) |
 | `sessions` | Natural-language search (NLQ) + full-width detail table with CSV/JSON exports |

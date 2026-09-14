@@ -6,18 +6,20 @@
 <title>AgentLedger - AI Usage Report</title>
 <style>
 :root{
-  --bg:#0f1220; --panel:#171b2e; --panel2:#1f2440; --line:#2a3052;
+  --bg:#0d0f1a; --panel:#171b2e; --panel2:#1f2440; --line:#2a3052;
   --txt:#e7eaf6; --mut:#8b92b5; --acc:#6c8bff; --ok:#3ddc97; --warn:#ffc857; --bad:#ff5d73;
+  --gold:#d4af7a; --gold-hi:#f3e3bb; --gold-tx:#e8cf9a; --serif:Georgia,'Times New Roman',serif;
 }
 [data-theme="light"]{
-  --bg:#f5f7ff; --panel:#ffffff; --panel2:#eef1ff; --line:#d6dcff;
-  --txt:#1a1f3d; --mut:#6b7280; --acc:#4f46e5;
+  --bg:#f7f5ef; --panel:#fffdf8; --panel2:#f3efe4; --line:#e2d9c2;
+  --txt:#23202a; --mut:#6b7280; --acc:#4f46e5;
+  --gold:#8a6d3b; --gold-hi:#8a6d3b; --gold-tx:#8a6d3b;
 }
 *{box-sizing:border-box}
-body{margin:0;font-family:'Inter','Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--txt);font-size:14px}
-header{position:sticky;top:0;z-index:100;padding:14px 24px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:rgba(23,27,46,0.85);backdrop-filter:blur(12px)}
-[data-theme="light"] header{background:rgba(255,255,255,0.85)}
-header h1{margin:0;font-size:18px;background:linear-gradient(90deg, var(--acc), var(--ok));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:-0.3px}
+body{margin:0;font-family:'Inter','Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--txt);font-size:14px;transition:background .3s ease,color .3s ease}
+header{position:sticky;top:0;z-index:100;padding:14px 24px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:rgba(23,27,46,0.85);backdrop-filter:blur(12px);transition:background .3s ease}
+[data-theme="light"] header{background:rgba(255,253,248,0.85)}
+header h1{margin:0;font-family:var(--serif);font-weight:400;font-size:22px;letter-spacing:.5px;background:linear-gradient(100deg,var(--gold-hi) 0%,var(--gold) 45%,var(--gold-hi) 60%,var(--gold) 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 .app{ min-height:100vh; }
 .main{flex:1; min-width:0}
 .wrap{padding:18px 24px 60px}
@@ -30,22 +32,22 @@ select,input{width:100%;background:var(--panel2);color:var(--txt);border:1px sol
 input[type=date]{color-scheme:dark}
 select[multiple]{height:110px}
 .fbtn{background:var(--panel2);border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:8px 12px;cursor:pointer;font-size:13px;transition:all .15s}
-.fbtn:hover{border-color:var(--acc);transform:translateY(-1px)}
+.fbtn:hover{border-color:var(--gold);transform:translateY(-1px)}
 .fbtn:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 select:focus-visible,input:focus-visible{outline:2px solid var(--acc);outline-offset:1px;border-color:var(--acc)}
-.card{transition:box-shadow .2s, transform .15s}
-.card:hover{box-shadow:0 4px 20px rgba(0,0,0,.25)}
-.kpi{transition:transform .15s}
-.kpi:hover{transform:translateY(-2px)}
+.card{transition:box-shadow .2s, transform .15s, border-color .2s}
+.card:hover{box-shadow:0 4px 20px rgba(0,0,0,.25);border-color:var(--gold)}
+.kpi{transition:transform .2s, box-shadow .25s, border-color .25s}
+.kpi:hover{transform:translateY(-2px);border-color:var(--gold);box-shadow:0 14px 34px rgba(0,0,0,.3)}
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:18px}
 .kpi-group{font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.5px;margin:16px 0 8px}
 .kpi-group:first-child{margin-top:0}
 .empty{text-align:center;color:var(--mut);padding:18px;font-size:13px}
 .sub{font-size:12px;color:var(--mut)}
-.kpi{background:linear-gradient(135deg, var(--panel) 0%, var(--panel2) 100%);border:1px solid var(--line);border-radius:12px;padding:14px 16px;position:relative;overflow:hidden}
-.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg, var(--acc), var(--ok));opacity:.7}
-.kpi .v{font-size:22px;font-weight:700;margin-top:4px}
-.kpi .l{font-size:12px;color:var(--mut)}
+.kpi{background:linear-gradient(160deg, var(--panel) 0%, var(--panel2) 100%);border:1px solid var(--line);border-radius:14px;padding:14px 16px;position:relative;overflow:hidden;transition:transform .2s,box-shadow .25s,border-color .25s}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,var(--gold) 30%,var(--gold-hi) 50%,var(--gold) 70%,transparent);opacity:.85}
+.kpi .v{font-family:var(--serif);font-size:26px;font-weight:400;margin-top:4px;font-variant-numeric:tabular-nums}
+.kpi .l{font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:1px}
 .kpi .d{font-size:11px;color:var(--mut)}
 .charts{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(380px,100%),1fr));gap:12px}
 .chart{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;height:min(300px,60vh);display:flex;flex-direction:column;animation:fadeIn .4s ease-out}
@@ -58,7 +60,7 @@ select:focus-visible,input:focus-visible{outline:2px solid var(--acc);outline-of
 .icon-btn:hover{background:var(--acc);color:#fff;border-color:var(--acc)}
 .chart{cursor:default}
 .chart .canvas-wrap{cursor:zoom-in}
-.chart:hover{border-color:var(--acc)}
+.chart:hover{border-color:var(--gold)}
 .kpi-spark{height:28px;margin-top:8px;opacity:.9}
 .kpi-spark canvas{width:100%!important;height:28px!important}
 .chart .canvas-wrap{flex:1;min-height:0;position:relative}
@@ -85,12 +87,15 @@ details summary{cursor:pointer;font-weight:600;color:var(--acc)}
 @media (max-width:1250px){#filterbar-quick{grid-template-columns:1fr 1fr 1fr}}
 @media (max-width:700px){.prow,.brow3{grid-template-columns:1fr 1fr}.prow .mid{grid-column:1/-1}}
 .tab-scroll td:first-child,.tab-scroll th:first-child{position:sticky;left:0;background:var(--panel2);z-index:1}
+[dir="rtl"] #drawer{right:auto;left:0;transform:translateX(-105%);border-left:none;border-right:1px solid var(--line);box-shadow:20px 0 60px rgba(0,0,0,.5)}
+[dir="rtl"] #drawer.open{transform:none}
+[dir="rtl"] .tab-scroll td:first-child,[dir="rtl"] .tab-scroll th:first-child{left:auto;right:0}
 .prow .mid{font-weight:600;font-size:12px}
 .prow label{font-size:10px;color:var(--mut)}
 .prow input{font-size:12px;padding:6px}
 .note{color:var(--mut);font-size:12px;margin-top:10px}
 table{width:100%;border-collapse:collapse;margin-top:12px;font-size:12px}
-th,td{padding:7px 9px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+th,td{padding:7px 9px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap;font-variant-numeric:tabular-nums}
 th{position:sticky;top:0;background:var(--panel2);cursor:pointer;user-select:none}
 tr:hover{background:var(--panel2)}
 .tab-scroll{max-height:480px;overflow:auto;border:1px solid var(--line);border-radius:10px}
@@ -129,15 +134,16 @@ tr:hover{background:var(--panel2)}
 .compare-card .big{font-size:18px;font-weight:700}
 /* onglets */
 .tabs{display:flex;gap:6px;flex-wrap:wrap}
-.tab-btn{background:transparent;border:1px solid transparent;color:var(--mut);border-radius:8px;padding:8px 14px;cursor:pointer;font-size:13px;font-weight:600;transition:all .15s}
+.tab-btn{background:transparent;border:1px solid transparent;color:var(--mut);border-radius:8px 8px 0 0;padding:8px 14px;cursor:pointer;font-size:13px;font-weight:600;transition:all .2s;position:relative}
 .tab-btn:hover{color:var(--txt);background:var(--panel2)}
-.tab-btn.active{background:var(--acc);color:#fff}
-.tab-btn:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.tab-btn.active{background:transparent;color:var(--gold-tx)}
+.tab-btn.active::after{content:'';position:absolute;left:10px;right:10px;bottom:-1px;height:2px;border-radius:2px;background:linear-gradient(90deg,transparent,var(--gold) 30%,var(--gold-hi) 50%,var(--gold) 70%,transparent)}
+.tab-btn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 .view{display:none}
 .view.active{display:block;animation:fadeIn .3s ease-out}
 /* barre de filtres sticky compacte */
-#filterbar{position:sticky;top:64px;z-index:90;background:rgba(23,27,46,0.92);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin-bottom:12px}
-[data-theme="light"] #filterbar{background:rgba(255,255,255,0.92)}
+#filterbar{position:sticky;top:64px;z-index:90;background:rgba(16,19,32,0.92);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin-bottom:12px;transition:background .3s ease}
+[data-theme="light"] #filterbar{background:rgba(255,253,248,0.92)}
 #filterbar-quick{display:grid;grid-template-columns:130px 130px 1fr 170px auto auto;gap:10px;align-items:end}
 #filterbar-quick .fld label{display:block;font-size:11px;color:var(--mut);margin-bottom:5px}
 @media (max-width:900px){ #filterbar-quick{grid-template-columns:1fr 1fr} }
@@ -171,7 +177,18 @@ tr:hover{background:var(--panel2)}
   <button class="fbtn" id="theme-toggle" data-i18n-title="theme_title" title="Light/dark theme" data-i18n-aria="theme_toggle" aria-label="Toggle theme">🌓</button>
   <button class="fbtn" id="share-link" data-i18n-title="share_title" title="Copy filtered link" data-i18n="share">🔗 Share</button>
   <button class="fbtn" id="print-btn" data-i18n-title="print_title" title="Print / PDF" data-i18n="print_btn">🖨️ Print</button>
-  <button class="fbtn" id="lang-toggle" title="Language / Langue">FR</button>
+  <select id="lang-select" class="fbtn" title="Language / Langue" aria-label="Language" style="width:auto">
+    <option value="en">English</option>
+    <option value="fr">Français</option>
+    <option value="es">Español</option>
+    <option value="pt">Português</option>
+    <option value="zh">中文</option>
+    <option value="hi">हिन्दी</option>
+    <option value="ar">العربية</option>
+    <option value="bn">বাংলা</option>
+    <option value="ru">Русский</option>
+    <option value="id">Bahasa Indonesia</option>
+  </select>
   <span style="flex:1"></span>
   <span class="tag" id="db-line"></span>
 </header>
@@ -206,6 +223,11 @@ tr:hover{background:var(--panel2)}
   <div class="card" id="anomaly-card" style="display:none"><h3><span data-i18n="ch_anomalies">Anomalies detected</span> <span class="tag" id="anomaly-count"></span></h3><div id="anomaly-list" class="small"></div></div>
     <div class="chart" data-chart="c-cost-hist"><div class="chart-head"><h3 data-i18n="ch_hist">Cost / session histogram</h3><div class="chart-tools"><button class="icon-btn" data-zoom="c-cost-hist" data-i18n-title="zoom_btn" title="Zoom" data-i18n-aria="zoom_btn" aria-label="Zoom">⛶</button><button class="icon-btn" data-png="c-cost-hist" data-i18n-title="png_btn" title="PNG" data-i18n-aria="png_btn" aria-label="PNG">⬇</button></div></div><div class="canvas-wrap"><canvas id="c-cost-hist"></canvas></div></div>
     <div class="chart" data-chart="c-cache"><div class="chart-head"><h3 data-i18n="ch_cache">Cache & errors</h3><div class="chart-tools"><button class="icon-btn" data-zoom="c-cache" data-i18n-title="zoom_btn" title="Zoom" data-i18n-aria="zoom_btn" aria-label="Zoom">⛶</button><button class="icon-btn" data-png="c-cache" data-i18n-title="png_btn" title="PNG" data-i18n-aria="png_btn" aria-label="PNG">⬇</button></div></div><div class="canvas-wrap"><canvas id="c-cache"></canvas></div></div>
+  </div>
+  <div class="trio" id="trio-models">
+    <div class="chart" data-chart="c-tok-model"><div class="chart-head"><h3 data-i18n="ch_tok_model">Tokens per model</h3><div class="chart-tools"><button class="icon-btn" data-zoom="c-tok-model" data-i18n-title="zoom_btn" title="Zoom" data-i18n-aria="zoom_btn" aria-label="Zoom">⛶</button><button class="icon-btn" data-png="c-tok-model" data-i18n-title="png_btn" title="PNG" data-i18n-aria="png_btn" aria-label="PNG">⬇</button></div></div><div class="canvas-wrap"><canvas id="c-tok-model"></canvas></div></div>
+    <div class="chart" data-chart="c-req-model"><div class="chart-head"><h3 data-i18n="ch_req_model">Requests per model</h3><div class="chart-tools"><button class="icon-btn" data-zoom="c-req-model" data-i18n-title="zoom_btn" title="Zoom" data-i18n-aria="zoom_btn" aria-label="Zoom">⛶</button><button class="icon-btn" data-png="c-req-model" data-i18n-title="png_btn" title="PNG" data-i18n-aria="png_btn" aria-label="PNG">⬇</button></div></div><div class="canvas-wrap"><canvas id="c-req-model"></canvas></div></div>
+    <div class="chart" data-chart="c-cost-model-bar"><div class="chart-head"><h3 data-i18n="ch_cost_model">Cost by model</h3><div class="chart-tools"><button class="icon-btn" data-zoom="c-cost-model-bar" data-i18n-title="zoom_btn" title="Zoom" data-i18n-aria="zoom_btn" aria-label="Zoom">⛶</button><button class="icon-btn" data-png="c-cost-model-bar" data-i18n-title="png_btn" title="PNG" data-i18n-aria="png_btn" aria-label="PNG">⬇</button></div></div><div class="canvas-wrap"><canvas id="c-cost-model-bar"></canvas></div></div>
   </div>
   <div class="charts" id="charts">
     <div class="chart chart-full" data-chart="c-forecast"><div class="chart-head"><h3 data-i18n="ch_forecast">30-day cost forecast</h3><div class="chart-tools"><button class="icon-btn" data-zoom="c-forecast" data-i18n-title="zoom_btn" title="Zoom" data-i18n-aria="zoom_btn" aria-label="Zoom">⛶</button><button class="icon-btn" data-png="c-forecast" data-i18n-title="png_btn" title="PNG" data-i18n-aria="png_btn" aria-label="PNG">⬇</button></div></div><div class="canvas-wrap"><canvas id="c-forecast"></canvas></div></div>
@@ -313,305 +335,13 @@ const $ = (s) => {
   const el=document.getElementById(s);
   return el || document.querySelector('#'+CSS.escape(s));
 };
-const I18N={
-en:{
-  doc_title:'AgentLedger - AI Usage Report',
-  app_title:'AgentLedger — AI usage',
-  views_aria:'Views',
-  tab_overview:'📊 Overview',
-  tab_models:'🧠 Models',
-  tab_projects:'📁 Projects',
-  tab_sessions:'📋 Sessions',
-  theme_title:'Light/dark theme',
-  theme_toggle:'Toggle theme',
-  share:'🔗 Share',
-  share_title:'Copy filtered link',
-  share_copied:'✓ Copied',
-  share_prompt:'Link to copy:',
-  print_btn:'🖨️ Print',
-  print_title:'Print / PDF',
-  lang_title:'Language / Langue',
-  f_from:'From',
-  f_to:'To',
-  f_search:'Title search',
-  search_ph:'session, task...',
-  f_source:'Source',
-  opt_all:'All',
-  filters_show:'＋ Filters',
-  filters_hide:'－ Filters',
-  f_reset:'Reset',
-  f_models:'Models (multi)',
-  f_agent:'Agent',
-  f_project:'Project',
-  f_team:'Team',
-  f_cmin:'Min cost ($)',
-  f_cmax:'Max cost ($)',
-  view_overview:'Overview',
-  view_models:'Models',
-  view_projects:'Projects',
-  view_sessions:'Sessions',
-  ch_anomalies:'Anomalies detected',
-  ch_hist:'Cost / session histogram',
-  ch_cache:'Cache & errors',
-  ch_forecast:'30-day cost forecast',
-  ch_cost_day:'Cost per day (by model)',
-  ch_tok_day:'Tokens per day (by model)',
-  ch_cost_model:'Cost by model',
-  ch_cost_agent:'Cost by agent',
-  ch_cost_team:'Cost by team',
-  zoom_btn:'Zoom',
-  png_btn:'PNG',
-  zoom_close:'Close',
-  zoom_aria:'Enlarged chart',
-  drawer_title:'Session details',
-  drawer_close:'✕ Close',
-  kpi_g_cost:'Costs',
-  kpi_g_tok:'Tokens',
-  kpi_total:'Total cost',
-  kpi_input:'Input tokens',
-  kpi_output:'Output tokens',
-  kpi_cache:'Cache read',
-  kpi_reason:'Reasoning',
-  kpi_cpm:'Cost / 1k tokens',
-  kpi_sessions:'Sessions',
-  kpi_tps:'Tokens / session',
-  kpi_cpp:'Cost / project',
-  kpi_save:'Savings',
-  kpi_sessions_u:'sessions',
-  kpi_avg:'avg',
-  kpi_projects:'{n} project(s)',
-  kpi_input_pct:'{x}% of input tokens',
-  kpi_output_pct:'{x}% of output volume',
-  kpi_vs:'vs reported',
-  kpi_none:'No sessions',
-  b_global:'Global (30d)',
-  b_project:'Project {p}',
-  b_model:'Model {m}',
-  b_remaining:'Remaining {x}',
-  b_over:'Over by {x}',
-  anom_spike:'+30% vs 7d',
-  fc_empty:'Not enough data (≥7d)',
-  fc_title:'30-day forecast: {c} (slope {s}/d)',
-  ds_history:'History',
-  ds_forecast:'30-day forecast',
-  cache_uncached:'Input (uncached)',
-  compare_title:'Model comparison (multiple selection)',
-  pricing_title:'Customize per-model costs ($/1M tokens)',
-  pricing_note:'An empty field = no declared price → the cost computed by the agent is kept. Click « Export pricing.json », replace <b>config/pricing.json</b>, then rerun <code>python extract.py --full && python build_report.py</code>.',
-  p_export:'Export pricing.json',
-  draft_clear:'Clear draft',
-  pricing_tip:'Tip: typing applies <b>live</b> and saves a browser draft. Export to persist on the build side.',
-  p_exported:'pricing.json exported ({n} model(s)) - replace config/pricing.json then: python extract.py --full && python build_report.py',
-  p_cleared:'Draft cleared.',
-  budgets_title:'Monthly budgets per model & project ($)',
-  budgets_note:'Set monthly caps (rolling 30d). Empty = no cap. Live + browser draft like pricing.',
-  b_export:'Export budgets.json',
-  budgets_note2:'Global = consolidated cap. Per model/project = detailed tracking in the Budgets grid above.',
-  b_exported:'budgets.json exported ({n} models, {m} projects)',
-  b_cleared:'Budgets draft cleared.',
-  nlq_aria:'Natural language search (NLQ)',
-  nlq_ph:'E.g.: big-pickle cost march, OpenCost project, anomaly',
-  nlq_go:'Go',
-  nlq_default:'Filters applied',
-  hint_model:'model',
-  hint_project:'project',
-  hint_team:'team',
-  hint_anom:'anomalies',
-  hint_cost:'cost',
-  t_title:'Detailed sessions',
-  t_csv:'Export CSV',
-  t_json:'Export JSON',
-  th_date:'Date',
-  th_title:'Title',
-  th_model:'Model',
-  th_agent:'Agent',
-  th_project:'Project',
-  th_source:'Source',
-  th_team:'Team',
-  th_cost:'Cost',
-  th_tin:'Tokens in',
-  th_tout:'Tokens out',
-  th_cwrite:'Cache written',
-  th_notes:'Notes',
-  t_noresults:'No results',
-  t_prev:'← Prev',
-  t_next:'Next →',
-  t_page:'page {a}/{b}',
-  cost_custom:'custom',
-  note_add:'Add note',
-  note_prompt:'Note for {id}:',
-  d_session:'Session',
-  d_tokinout:'Tokens in/out',
-  d_cache:'Cache read/written',
-  meta_gen:'Generated {d} (UTC) • {n} sessions',
-  meta_src:'Source: {p}',
-  meta_pricing:'• {n} model(s) with custom pricing',
-  meta_live:'• {n} (live)',
-  pe_input:'input',
-  pe_output:'output',
-  pe_cr:'cache read',
-  pe_cw:'cache write',
-  pe_re:'reasoning',
-  pe_clear:'Clear',
-  be_global:'Global',
-  be_monthly:'monthly $',
-  be_project:'{p} (project)',
-  untitled:'(untitled)',
-  t_of:'of',
-  meta_updated:'• updated {d}',
-},
-fr:{
-  doc_title:'AgentLedger - Rapport d’usage IA',
-  app_title:'AgentLedger — Utilisation IA',
-  views_aria:'Vues',
-  tab_overview:'📊 Aperçu',
-  tab_models:'🧠 Modèles',
-  tab_projects:'📁 Projets',
-  tab_sessions:'📋 Sessions',
-  theme_title:'Thème clair/sombre',
-  theme_toggle:'Changer de thème',
-  share:'🔗 Partager',
-  share_title:'Copier le lien filtré',
-  share_copied:'✓ Copié',
-  share_prompt:'Lien à copier :',
-  print_btn:'🖨️ Imprimer',
-  print_title:'Imprimer / PDF',
-  lang_title:'Language / Langue',
-  f_from:'De',
-  f_to:'À',
-  f_search:'Recherche titre',
-  search_ph:'session, tâche...',
-  f_source:'Source',
-  opt_all:'Tout',
-  filters_show:'＋ Filtres',
-  filters_hide:'－ Filtres',
-  f_reset:'Réinitialiser',
-  f_models:'Modèles (multi)',
-  f_agent:'Agent',
-  f_project:'Projet',
-  f_team:'Équipe',
-  f_cmin:'Coût min ($)',
-  f_cmax:'Coût max ($)',
-  view_overview:'Aperçu',
-  view_models:'Modèles',
-  view_projects:'Projets',
-  view_sessions:'Sessions',
-  ch_anomalies:'Anomalies détectées',
-  ch_hist:'Histogramme coût / session',
-  ch_cache:'Cache et erreurs',
-  ch_forecast:'Prévision de coût à 30 jours',
-  ch_cost_day:'Coût par jour (par modèle)',
-  ch_tok_day:'Tokens par jour (par modèle)',
-  ch_cost_model:'Coût par modèle',
-  ch_cost_agent:'Coût par agent',
-  ch_cost_team:'Coût par équipe',
-  zoom_btn:'Zoom',
-  png_btn:'PNG',
-  zoom_close:'Fermer',
-  zoom_aria:'Graphique agrandi',
-  drawer_title:'Détails de la session',
-  drawer_close:'✕ Fermer',
-  kpi_g_cost:'Coûts',
-  kpi_g_tok:'Tokens',
-  kpi_total:'Coût total',
-  kpi_input:'Tokens d’entrée',
-  kpi_output:'Tokens de sortie',
-  kpi_cache:'Cache lu',
-  kpi_reason:'Raisonnement',
-  kpi_cpm:'Coût / 1k tokens',
-  kpi_sessions:'Sessions',
-  kpi_tps:'Tokens / session',
-  kpi_cpp:'Coût / projet',
-  kpi_save:'Économies',
-  kpi_sessions_u:'sessions',
-  kpi_avg:'moy.',
-  kpi_projects:'{n} projet(s)',
-  kpi_input_pct:'{x} % des tokens d’entrée',
-  kpi_output_pct:'{x} % du volume de sortie',
-  kpi_vs:'vs déclaré',
-  kpi_none:'Aucune session',
-  b_global:'Global (30 j)',
-  b_project:'Projet {p}',
-  b_model:'Modèle {m}',
-  b_remaining:'Restant {x}',
-  b_over:'Dépassement de {x}',
-  anom_spike:'+30 % vs 7 j',
-  fc_empty:'Données insuffisantes (≥7 j)',
-  fc_title:'Prévision 30 j : {c} (pente {s}/j)',
-  ds_history:'Historique',
-  ds_forecast:'Prévision 30 j',
-  cache_uncached:'Entrée (non caché)',
-  compare_title:'Comparaison de modèles (sélection multiple)',
-  pricing_title:'Personnaliser les coûts par modèle ($/1M tokens)',
-  pricing_note:'Un champ vide = aucun prix déclaré → le coût calculé par l’agent est conservé. Cliquez sur « Exporter pricing.json », remplacez <b>config/pricing.json</b>, puis relancez <code>python extract.py --full && python build_report.py</code>.',
-  p_export:'Exporter pricing.json',
-  draft_clear:'Effacer le brouillon',
-  pricing_tip:'Astuce : la saisie s’applique <b>en direct</b> et enregistre un brouillon navigateur. Exportez pour persister côté build.',
-  p_exported:'pricing.json exporté ({n} modèle(s)) — remplacez config/pricing.json puis : python extract.py --full && python build_report.py',
-  p_cleared:'Brouillon effacé.',
-  budgets_title:'Budgets mensuels par modèle et projet ($)',
-  budgets_note:'Définissez des plafonds mensuels (30 j glissants). Vide = aucun plafond. Live + brouillon navigateur comme pour les prix.',
-  b_export:'Exporter budgets.json',
-  budgets_note2:'Global = plafond consolidé. Par modèle/projet = suivi détaillé dans la grille Budgets ci-dessus.',
-  b_exported:'budgets.json exporté ({n} modèles, {m} projets)',
-  b_cleared:'Brouillon des budgets effacé.',
-  nlq_aria:'Recherche en langage naturel (NLQ)',
-  nlq_ph:'Ex. : coût big-pickle mars, projet OpenCost, anomalie',
-  nlq_go:'OK',
-  nlq_default:'Filtres appliqués',
-  hint_model:'modèle',
-  hint_project:'projet',
-  hint_team:'équipe',
-  hint_anom:'anomalies',
-  hint_cost:'coût',
-  t_title:'Sessions détaillées',
-  t_csv:'Exporter CSV',
-  t_json:'Exporter JSON',
-  th_date:'Date',
-  th_title:'Titre',
-  th_model:'Modèle',
-  th_agent:'Agent',
-  th_project:'Projet',
-  th_source:'Source',
-  th_team:'Équipe',
-  th_cost:'Coût',
-  th_tin:'Tokens entrants',
-  th_tout:'Tokens sortants',
-  th_cwrite:'Cache écrit',
-  th_notes:'Notes',
-  t_noresults:'Aucun résultat',
-  t_prev:'← Préc.',
-  t_next:'Suivant →',
-  t_page:'page {a}/{b}',
-  cost_custom:'perso',
-  note_add:'Ajouter une note',
-  note_prompt:'Note pour {id} :',
-  d_session:'Session',
-  d_tokinout:'Tokens entrants/sortants',
-  d_cache:'Cache lu/écrit',
-  meta_gen:'Généré {d} (UTC) • {n} sessions',
-  meta_src:'Source : {p}',
-  meta_pricing:'• {n} modèle(s) à prix personnalisé',
-  meta_live:'• {n} (live)',
-  pe_input:'entrée',
-  pe_output:'sortie',
-  pe_cr:'cache lu',
-  pe_cw:'cache écrit',
-  pe_re:'raisonnement',
-  pe_clear:'Effacer',
-  be_global:'Global',
-  be_monthly:'mensuel $',
-  be_project:'{p} (projet)',
-  untitled:'(sans titre)',
-  t_of:'sur',
-  meta_updated:'• mis à jour {d}',
-}
-};
+const I18N=/*__LOCALES__*/;
 let LANG='en';
 try{
   const _qp=new URLSearchParams(location.search).get('lang');
   const _sv=localStorage.getItem('agentledger_lang');
-  LANG=(_qp||_sv||((navigator.language||'en').toLowerCase().startsWith('fr')?'fr':'en'));
+  const _bl=((navigator.language||'en').toLowerCase().split('-')[0]);
+  LANG=(_qp||_sv||(I18N[_bl]?_bl:'en'));
   if(!I18N[LANG]) LANG='en';
 }catch(e){LANG='en';}
 function t(k){ const d=I18N[LANG]||{}; if(d[k]!=null) return d[k]; const e=I18N.en||{}; return e[k]!=null?e[k]:k; }
@@ -623,8 +353,9 @@ function applyI18n(){
   document.querySelectorAll('[data-i18n-title]').forEach(el=>{ el.setAttribute('title', t(el.getAttribute('data-i18n-title'))); });
   document.querySelectorAll('[data-i18n-aria]').forEach(el=>{ el.setAttribute('aria-label', t(el.getAttribute('data-i18n-aria'))); });
   document.documentElement.lang=LANG;
+  document.documentElement.dir=(LANG==='ar'?'rtl':'ltr');
   document.title=t('doc_title');
-  const lb=$('#lang-toggle'); if(lb) lb.textContent=(LANG==='fr'?'EN':'FR');
+  const lb=$('#lang-select'); if(lb) lb.value=LANG;
 }
 function setLang(l){
   LANG=I18N[l]?l:'en';
@@ -668,9 +399,9 @@ function openDrawer(sid){
     [t('th_project'), escapeHtml(s.project_name||'')],
     [t('th_team'), escapeHtml(getTeam(s))],
     [t('th_cost'), fmtCost(s.cost)+' ('+escapeHtml(s.cost_source||'')+')'],
-    [t('d_tokinout'), fmtInt(s.tokens_input)+' / '+fmtInt(s.tokens_output)],
-    [t('kpi_reason'), fmtInt(s.tokens_reasoning)],
-    [t('d_cache'), fmtInt(s.tokens_cache_read)+' / '+fmtInt(s.tokens_cache_write)],
+    [t('d_tokinout'), fmtTok(s.tokens_input)+' / '+fmtTok(s.tokens_output)],
+    [t('kpi_reason'), fmtTok(s.tokens_reasoning)],
+    [t('d_cache'), fmtTok(s.tokens_cache_read)+' / '+fmtTok(s.tokens_cache_write)],
   ];
   document.getElementById('drawer-body').innerHTML='<dl>'+rows.map(r=>'<dt>'+r[0]+'</dt><dd>'+r[1]+'</dd>').join('')+'</dl>';
   document.getElementById('drawer').classList.add('open');
@@ -722,9 +453,9 @@ function doDrillFilter(type, value){
   pushURL(); render();
 }
 
-const PALETTE = ['#6c8bff','#3ddc97','#ffc857','#ff5d73','#9b7bff','#4fd6d6','#f78fb0','#a3d128','#ff9f43','#5f9ea0','#d9539f','#7e8fe0'];
+const PALETTE = ['#d4af7a','#9db89a','#c98f7a','#7e8fe0','#4fd6d6','#d9c9a3','#8a9b6e','#b76e5a','#6c8bff','#3ddc97','#9b7bff','#5f9ea0'];
 let CHART_TOOLTIP={backgroundColor:'rgba(23,27,46,0.95)',titleColor:'#e7eaf6',bodyColor:'#cbd5e1',borderColor:'#2a3052',borderWidth:1,padding:10,cornerRadius:8,displayColors:true,titleFont:{size:12,weight:'600'},bodyFont:{size:11}};
-const CHART_ANIM={duration:700,easing:'easeOutQuart'};
+const CHART_ANIM={duration:1000,easing:'easeOutQuart'};
 function chartColors(){
   const light=document.documentElement.getAttribute('data-theme')==='light';
   return light
@@ -736,7 +467,16 @@ function refreshChartTheme(){
   CHART_TOOLTIP={backgroundColor:CC.tipBg,titleColor:CC.tipTitle,bodyColor:CC.tipBody,borderColor:CC.tipBorder,borderWidth:1,padding:10,cornerRadius:8,displayColors:true,titleFont:{size:12,weight:'600'},bodyFont:{size:11}};
 }
 
-function fmtInt(n){ return Number(n||0).toLocaleString(LANG==='fr'?'fr-FR':'en-US'); }
+const NUM_LOCALES={en:'en-US',fr:'fr-FR',es:'es-ES',pt:'pt-PT',zh:'zh-CN',hi:'hi-IN',ar:'ar',bn:'bn',ru:'ru-RU',id:'id-ID'};
+function fmtInt(n){ try{ return Number(n||0).toLocaleString(NUM_LOCALES[LANG]||'en-US'); }catch(e){ return String(Number(n||0)); } }
+function fmtTok(n){
+  const v=Number(n||0), loc=(NUM_LOCALES[LANG]||'en-US'), a=Math.abs(v);
+  try{
+    if(a>=1e6) return (v/1e6).toLocaleString(loc,{maximumFractionDigits:2})+'M';
+    if(a>=1e3) return (v/1e3).toLocaleString(loc,{maximumFractionDigits:2})+'K';
+    return v.toLocaleString(loc,{maximumFractionDigits:0});
+  }catch(e){ return String(v); }
+}
 function fmtCost(n){
   if (n==null || isNaN(n)) return '$0';
   const abs=Math.abs(n);
@@ -889,13 +629,13 @@ function renderKPIs(list){
   const saving = orig - cost;
   const items=[
     ['cost', t('kpi_total'), fmtCost(cost), list.length+' '+t('kpi_sessions_u')],
-    ['tokens', t('kpi_input'), fmtInt(tin), ''],
-    ['tokens', t('kpi_output'), fmtInt(tout), ''],
-    ['tokens', t('kpi_cache'), fmtInt(tcach), tf('kpi_input_pct',{x:ratio.toFixed(1)})],
-    ['tokens', t('kpi_reason'), fmtInt(treas), tf('kpi_output_pct',{x:reasonRatio.toFixed(1)})],
+    ['tokens', t('kpi_input'), fmtTok(tin), ''],
+    ['tokens', t('kpi_output'), fmtTok(tout), ''],
+    ['tokens', t('kpi_cache'), fmtTok(tcach), tf('kpi_input_pct',{x:ratio.toFixed(1)})],
+    ['tokens', t('kpi_reason'), fmtTok(treas), tf('kpi_output_pct',{x:reasonRatio.toFixed(1)})],
     ['cost', t('kpi_cpm'), fmtCost(cpm), ''],
     ['cost', t('kpi_sessions'), fmtInt(list.length), ''],
-    ['tokens', t('kpi_tps'), fmtInt(tps), t('kpi_avg')],
+    ['tokens', t('kpi_tps'), fmtTok(tps), t('kpi_avg')],
     ['cost', t('kpi_cpp'), fmtCost(cpp), tf('kpi_projects',{n:projN})],
     ['cost', t('kpi_save'), fmtCost(saving), saving>0? t('kpi_vs') : ''],
   ];
@@ -930,12 +670,12 @@ function renderKPIs(list){
       // fill
       ctx.lineTo(w,h); ctx.lineTo(0,h); ctx.closePath(); ctx.fillStyle=col+'20'; ctx.fill();
     };
-    const cols=['#6c8bff','#3ddc97','#ffc857','#ff5d73','#9b7bff','#4fd6d6','#a3d128','#5f9ea0','#d9539f'];
+    const cols=['#d4af7a','#9db89a','#c98f7a','#7e8fe0','#4fd6d6','#d9c9a3','#8a9b6e','#b76e5a','#3ddc97'];
     days.length && Object.entries(series).forEach(([k,arr])=>{
       draw('spark-'+k, arr, cols[k%cols.length]);
       try{
         const card=document.getElementById('spark-'+k)?.closest('.kpi');
-        if(card && arr.length) card.title='min '+Math.round(Math.min(...arr)*100)/100+' • max '+Math.round(Math.max(...arr)*100)/100;
+        if(card && arr.length) card.title='min '+fmtTok(Math.round(Math.min(...arr)*100)/100)+' • max '+fmtTok(Math.round(Math.max(...arr)*100)/100);
       }catch(e2){}
     });
   }catch(e){}
@@ -989,7 +729,7 @@ function detectAnomalies(list){
   const anomal=[];
   days.forEach(([d,v])=>{
     const z=(v-mean)/sd;
-    if(Math.abs(z)>=2) anomal.push({d,v,z,reason:'z='+z.toFixed(1)+' (Ïƒ)'});
+    if(Math.abs(z)>=2) anomal.push({d,v,z,reason:'z='+z.toFixed(1)+' (σ)'});
   });
   // +30% vs rolling 7d average
   for(let i=7;i<days.length;i++){
@@ -1001,7 +741,7 @@ function detectAnomalies(list){
   if(!anomal.length){ card.style.display='none'; return; }
   card.style.display='';
   document.getElementById('anomaly-count').textContent='('+anomal.length+')';
-  box.innerHTML=anomal.map(a=>'<div>ðŸ“ˆ '+a.d+' : '+fmtCost(a.v)+' <span class="anomaly-badge">'+escapeHtml(a.reason)+'</span></div>').join('');
+  box.innerHTML=anomal.map(a=>'<div>📈 '+a.d+' : '+fmtCost(a.v)+' <span class="anomaly-badge">'+escapeHtml(a.reason)+'</span></div>').join('');
   // mark table rows
   setTimeout(()=>{
     const badDays=new Set(anomal.map(a=>a.d));
@@ -1048,7 +788,7 @@ function renderForecast(list){
   mkChart('c-forecast', {type:'bar', data:{
     labels: allLabels,
     datasets:[
-      {label:t('ds_history'), data: extendedHist, backgroundColor:'#6c8bff', borderColor:'#6c8bff', type:'bar'},
+      {label:t('ds_history'), data: extendedHist, backgroundColor:'#7e8fe0', borderColor:'#7e8fe0', type:'bar'},
       {label:t('ds_forecast'), data: extendedForecast, backgroundColor:'rgba(61,220,151,0.6)', borderColor:'#3ddc97', borderDash:[6,4], type:'line', fill:false, tension:0.2, pointRadius:2}
     ]
   }, options:{
@@ -1121,7 +861,7 @@ function renderCharts(list){
   const buckets={};
   cos.forEach(c=>{ const k=Math.max(1,Math.min(10,Math.ceil(Math.log10(c+1)))); buckets[k]=(buckets[k]||0)+1; });
   const ordered=[...Object.keys(buckets)].map(Number).sort((a,b)=>a-b);
-  cfg = {type:'bar', data:{labels: ordered.map(k=>k===1?'>0.01':('<1e'+k)), datasets:[{ data:ordered.map(k=>buckets[k]), backgroundColor:'#6c8bff', borderColor:'#6c8bff', borderWidth:1, borderRadius:4 }]}, options:{ responsive:true, maintainAspectRatio:false, animation:CHART_ANIM, plugins:{legend:{display:false}, tooltip:CHART_TOOLTIP}, scales:{y:{ticks:{color:CC.tick},grid:{color:CC.grid}},x:{ticks:{color:CC.tick},grid:{display:false}}} }};
+  cfg = {type:'bar', data:{labels: ordered.map(k=>k===1?'>0.01':('<1e'+k)), datasets:[{ data:ordered.map(k=>buckets[k]), backgroundColor:'#d4af7a', borderColor:'#d4af7a', borderWidth:1, borderRadius:4 }]}, options:{ responsive:true, maintainAspectRatio:false, animation:CHART_ANIM, plugins:{legend:{display:false}, tooltip:CHART_TOOLTIP}, scales:{y:{ticks:{color:CC.tick},grid:{color:CC.grid}},x:{ticks:{color:CC.tick},grid:{display:false}}} }};
   mkChart('c-cost-hist', cfg);
 
   // 6. cache/errors: cache read vs input + errors
@@ -1129,7 +869,7 @@ function renderCharts(list){
   const tin=list.reduce((a,s)=>a+Number(s.tokens_input||0),0);
   const saw=list.length;
   const errs=list.filter(s=>s.error).length;
-  cfg = {type:'doughnut', data:{labels:[t('kpi_cache'),t('cache_uncached')], datasets:[{ data:[tcr, Math.max(0,tin)], backgroundColor:[PALETTE[0],PALETTE[2]], borderColor:CC.border, borderWidth:2, hoverOffset:6 }]}, options:{ responsive:true, maintainAspectRatio:false, animation:CHART_ANIM, cutout:'58%', plugins:{legend:{position:'right',labels:{color:CC.tick,font:{size:10},padding:10,boxWidth:12}}, tooltip:{...CHART_TOOLTIP, callbacks:{label:(c)=>' '+c.label+': '+fmtInt(c.parsed)+' tok'}}} }};
+  cfg = {type:'doughnut', data:{labels:[t('kpi_cache'),t('cache_uncached')], datasets:[{ data:[tcr, Math.max(0,tin)], backgroundColor:[PALETTE[0],PALETTE[2]], borderColor:CC.border, borderWidth:2, hoverOffset:6 }]}, options:{ responsive:true, maintainAspectRatio:false, animation:CHART_ANIM, cutout:'58%', plugins:{legend:{position:'right',labels:{color:CC.tick,font:{size:10},padding:10,boxWidth:12}}, tooltip:{...CHART_TOOLTIP, callbacks:{label:(c)=>' '+c.label+': '+fmtTok(c.parsed)+' tok'}}} }};
   mkChart('c-cache', cfg);
 
   // 7. 30d forecast
@@ -1140,6 +880,23 @@ function renderCharts(list){
   cfg = {type:'bar', data:{labels: cteam.map(e=>e[0]), datasets:[{ data:cteam.map(e=>e[1]), backgroundColor:PALETTE, borderColor:PALETTE, borderWidth:1, borderRadius:4 }]}, options:{ responsive:true, maintainAspectRatio:false, animation:CHART_ANIM, plugins:{legend:{display:false}, tooltip:CHART_TOOLTIP}, scales:{y:{ticks:{color:CC.tick},grid:{color:CC.grid}},x:{ticks:{color:CC.tick},grid:{display:false}}} }};
   mkChart('c-cost-team', cfg);
   if(charts['c-cost-team']){ charts['c-cost-team'].options.onClick=(e,els)=>{ if(els.length){ const i=els[0].index; const lbl=cteam[i]&&cteam[i][0]; if(lbl) doDrillFilter('team', lbl); } }; charts['c-cost-team'].update(); }
+
+  // 9. tokens per model (doughnut, total in+out)
+  const pmod=[...list.reduce((m,s)=>{ const k=s.model_label||'?'; if(!m.has(k)) m.set(k,{tin:0,tout:0,cnt:0,cost:0}); const o=m.get(k); o.tin+=Number(s.tokens_input||0); o.tout+=Number(s.tokens_output||0); o.cnt++; o.cost+=Number(s.cost||0); return m; }, new Map()).entries()].sort((a,b)=>(b[1].tin+b[1].tout)-(a[1].tin+a[1].tout));
+  const pml=pmod.map(e=>e[0]);
+  cfg = {type:'doughnut', data:{labels: pml, datasets:[{ data:pmod.map(e=>e[1].tin+e[1].tout), backgroundColor:PALETTE, borderColor:CC.border, borderWidth:2, hoverOffset:6 }]}, options:{ responsive:true, maintainAspectRatio:false, animation:CHART_ANIM, cutout:'58%', plugins:{legend:{position:'right',labels:{color:CC.tick,font:{size:10},padding:10,boxWidth:12}}, tooltip:{...CHART_TOOLTIP, callbacks:{label:(c)=>' '+c.label+': '+fmtTok(c.parsed)}}}}};
+  mkChart('c-tok-model', cfg);
+  if(charts['c-tok-model']){ charts['c-tok-model'].options.onClick=(e,els)=>{ if(els.length){ const i=els[0].index; if(pml[i]) doDrillFilter('model', pml[i]); } }; charts['c-tok-model'].update(); }
+
+  // 10. requests per model (doughnut, session count)
+  cfg = {type:'doughnut', data:{labels: pml, datasets:[{ data:pmod.map(e=>e[1].cnt), backgroundColor:PALETTE, borderColor:CC.border, borderWidth:2, hoverOffset:6 }]}, options:{ responsive:true, maintainAspectRatio:false, animation:CHART_ANIM, cutout:'58%', plugins:{legend:{position:'right',labels:{color:CC.tick,font:{size:10},padding:10,boxWidth:12}}, tooltip:{...CHART_TOOLTIP, callbacks:{label:(c)=>' '+c.label+': '+fmtInt(c.parsed)}}}}};
+  mkChart('c-req-model', cfg);
+  if(charts['c-req-model']){ charts['c-req-model'].options.onClick=(e,els)=>{ if(els.length){ const i=els[0].index; if(pml[i]) doDrillFilter('model', pml[i]); } }; charts['c-req-model'].update(); }
+
+  // 11. cost per model (doughnut)
+  cfg = {type:'doughnut', data:{labels: pml, datasets:[{ data:pmod.map(e=>e[1].cost), backgroundColor:PALETTE, borderColor:CC.border, borderWidth:2, hoverOffset:6 }]}, options:{ responsive:true, maintainAspectRatio:false, animation:CHART_ANIM, cutout:'58%', plugins:{legend:{position:'right',labels:{color:CC.tick,font:{size:10},padding:10,boxWidth:12}}, tooltip:{...CHART_TOOLTIP, callbacks:{label:(c)=>' '+c.label+': '+fmtCost(c.parsed)}}}}};
+  mkChart('c-cost-model-bar', cfg);
+  if(charts['c-cost-model-bar']){ charts['c-cost-model-bar'].options.onClick=(e,els)=>{ if(els.length){ const i=els[0].index; if(pml[i]) doDrillFilter('model', pml[i]); } }; charts['c-cost-model-bar'].update(); }
 }
 
 function renderTable(list){
@@ -1163,11 +920,11 @@ function renderTable(list){
     '<td><span class="badge">'+escapeHtml(s.source||'opencode')+'</span></td>'+
     '<td>'+escapeHtml(getTeam(s))+'</td>'+
     '<td>'+fmtCost(s.cost)+'</td>'+
-    '<td>'+fmtInt(s.tokens_input)+'</td>'+
-    '<td>'+fmtInt(s.tokens_output)+'</td>'+
-    '<td>'+fmtInt(s.tokens_cache_read)+'</td>'+
-    '<td>'+fmtInt(s.tokens_reasoning)+'</td>'+
-    '<td>'+fmtInt(s.tokens_cache_write)+'</td>'+
+    '<td>'+fmtTok(s.tokens_input)+'</td>'+
+    '<td>'+fmtTok(s.tokens_output)+'</td>'+
+    '<td>'+fmtTok(s.tokens_cache_read)+'</td>'+
+    '<td>'+fmtTok(s.tokens_reasoning)+'</td>'+
+    '<td>'+fmtTok(s.tokens_cache_write)+'</td>'+
     '<td>'+(s.cost_source==='pricing' || String(s.cost_source||'').startsWith('pricing')? '<span class="pos">'+t('cost_custom')+'</span>' : '<span class="neg">'+escapeHtml(s.cost_source||s.source||'opencode')+'</span>')+'</td>'+
     '<td><button class="fbtn" data-note="'+s.id+'" title="'+escapeHtml(note||t('note_add'))+'">'+(note?'📝':'🗒️')+'</button></td></tr>';
   }).join('') || '<tr><td colspan="99">'+emptyState(t('t_noresults'))+'</td></tr>';
@@ -1206,7 +963,7 @@ function renderCompare(list){
     const tok=sub.reduce((a,s)=>a+Number(s.tokens_input||0)+Number(s.tokens_output||0),0);
     const cnt=sub.length;
     const avg=cnt? tok/cnt:0;
-    return '<div class="compare-card"><h4>'+escapeHtml(m)+'</h4><div class="big">'+fmtCost(cost)+'</div><div class="small">'+cnt+' sessions • '+fmtInt(tok)+' tok • '+fmtInt(Math.round(avg))+' tok/sess</div></div>';
+    return '<div class="compare-card"><h4>'+escapeHtml(m)+'</h4><div class="big">'+fmtCost(cost)+'</div><div class="small">'+cnt+' sessions • '+fmtTok(tok)+' tok • '+fmtTok(Math.round(avg))+' tok/sess</div></div>';
   }).join('');
   // line compare per day
   const byDay=new Map();
@@ -1280,7 +1037,7 @@ function bindEvents(){
   const bex=$('#b-export'); if(bex) bex.addEventListener('click', exportBudgets);
   const bclr=$('#b-clear-draft'); if(bclr) bclr.addEventListener('click', clearBudgetsDraft);
   const th=$('#theme-toggle'); if(th) th.addEventListener('click', toggleTheme);
-  const lg=$('#lang-toggle'); if(lg) lg.addEventListener('click', ()=> setLang(LANG==='fr'?'en':'fr'));
+  const lg=$('#lang-select'); if(lg) lg.addEventListener('change', (e)=> setLang(e.target.value));
   const printBtn=$('#print-btn'); if(printBtn) printBtn.addEventListener('click', ()=> window.print());
   const share=$('#share-link'); if(share) share.addEventListener('click', ()=>{
     pushURL();

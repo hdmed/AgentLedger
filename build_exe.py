@@ -30,7 +30,7 @@ def main():
         command.append("--clean")
     if not args.confirm:
         command.append("--noconfirm")
-    for source, destination in (("templates", "templates"), ("assets", "assets"), ("config", "config")):
+    for source, destination in (("templates", "templates"), ("assets", "assets"), ("config", "config"), ("locales", "locales")):
         command.extend(["--add-data", "{}{}{}".format(os.path.join(root, source), separator, destination)])
     command.extend(["--distpath", os.path.join(root, "dist"), "--workpath", os.path.join(root, "build"), os.path.join(root, "launcher.py")])
 

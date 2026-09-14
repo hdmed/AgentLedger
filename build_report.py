@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Generate dist/report.html: a 100%% offline visual report.
 
-Reads data/dataset.json (produced by extract.py), inlines Chart.js and the
-dataset, then writes a single HTML file viewable without network.
+Reads data/dataset.json (produced by extract.py), inlines Chart.js, the
+locales/*.json UI strings and the dataset, then writes a single HTML file
+viewable without network.
 
 Usage: python build_report.py [--dataset data/dataset.json] [--out dist/report.html]
 """
@@ -17,6 +18,7 @@ import resources
 BASE_DIR = resources.app_root()
 DEFAULT_DATASET = resources.dataset_path()
 CHART_JS = resources.resource_path("assets", "chart.umd.min.js")
+LOCALES_DIR = resources.resource_path("locales")
 DEFAULT_OUT = resources.report_path()
 TEMPLATE_PATH = resources.resource_path("templates", "report_template.html")
 
@@ -34,6 +36,28 @@ def read_asset(path, fallback=""):
 
 # Template is now loaded from TEMPLATE_PATH
 TEMPLATE = read_asset(TEMPLATE_PATH)
+
+
+def load_locales(locales_dir):
+    """Load locales/*.json into {lang: {key: text}}. Skips invalid files."""
+    locales = {}
+    try:
+        names = sorted(os.listdir(locales_dir))
+    except OSError:
+        return locales
+    for name in names:
+        if not name.endswith(".json"):
+            continue
+        lang = name[:-5]
+        try:
+            with open(os.path.join(locales_dir, name), "r", encoding="utf-8") as f:
+                data = json.load(f)
+        except (OSError, ValueError) as e:
+            logger.warning("ignoring invalid locale {}: {}".format(name, e))
+            continue
+        if isinstance(data, dict) and data:
+            locales[lang] = data
+    return locales
 
 
 def generate_report(dataset_path=DEFAULT_DATASET, out_path=DEFAULT_OUT, strict=False, external=False):
@@ -64,6 +88,12 @@ def generate_report(dataset_path=DEFAULT_DATASET, out_path=DEFAULT_OUT, strict=F
                 .replace("//# sourceMappingURL=chart.umd.js.map", ""))
 
     chartjs = sanitize(chartjs)
+    locales = load_locales(LOCALES_DIR)
+    if not locales:
+        msg = "WARNING: {} has no locales/*.json, UI strings missing".format(LOCALES_DIR)
+        logger.warning(msg)
+        if strict:
+            raise SystemExit(1)
     if external:
         dataset_json = "{}"
         html = TEMPLATE.replace("/*__DATASET__*/", dataset_json)
@@ -94,6 +124,7 @@ def generate_report(dataset_path=DEFAULT_DATASET, out_path=DEFAULT_OUT, strict=F
         dataset_json = sanitize(json.dumps(dataset, ensure_ascii=False, separators=(",", ":")))
         html = TEMPLATE.replace("/*__DATASET__*/", dataset_json)
     html = html.replace("/*__CHARTJS__*/", chartjs)
+    html = html.replace("/*__LOCALES__*/", sanitize(json.dumps(locales, ensure_ascii=False, separators=(",", ":"))))
 
     out_dir = os.path.dirname(os.path.abspath(out_path))
     os.makedirs(out_dir, exist_ok=True)
