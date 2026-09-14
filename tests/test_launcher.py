@@ -67,6 +67,10 @@ class TestLauncher(unittest.TestCase):
     def test_version(self):
         self.assertEqual(launcher.run(["--version"]), 0)
 
+    def test_version_single_source(self):
+        import resources
+        self.assertEqual(launcher.VERSION, resources.__version__)
+
     def test_parse_kilo_args(self):
         args = launcher.parse_args(["--no-open"])
         self.assertFalse(args.no_kilo)

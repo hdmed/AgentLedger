@@ -14,8 +14,57 @@ import extract_kilo
 import extract_workbuddy
 import resources
 
-VERSION = "1.0.0"
+VERSION = resources.__version__
 logger = logging.getLogger("agentledger")
+
+
+SOURCES = {
+    "kilo": {
+        "label": "Kilo",
+        "module": extract_kilo,
+        "state_attr": "KILO_STATE_PATH",
+        "no_flag": "no_kilo",
+        "path_arg": "kilo_db",
+        "path_kwarg": "kilo_db",
+        "full_arg": "kilo_full",
+        "full_kwarg": "kilo_full",
+        "since_arg": "kilo_since",
+        "since_kwarg": "kilo_since",
+        "missing_key": "db_path",
+        "keep_msg": "keeping the OpenCode dataset",
+        "merged_msg": "Kilo merged: %d kilo session(s), %d total",
+    },
+    "autoclaw": {
+        "label": "AutoClaw",
+        "module": extract_autoclaw,
+        "state_attr": "AUTOCLAW_STATE_PATH",
+        "no_flag": "no_autoclaw",
+        "path_arg": "autoclaw_dir",
+        "path_kwarg": "autoclaw_dir",
+        "full_arg": "autoclaw_full",
+        "full_kwarg": "autoclaw_full",
+        "since_arg": "autoclaw_since",
+        "since_kwarg": "autoclaw_since",
+        "missing_key": "telemetry_dir",
+        "keep_msg": "keeping other sources",
+        "merged_msg": "AutoClaw merged: %d autoclaw session(s), %d total",
+    },
+    "workbuddy": {
+        "label": "WorkBuddy",
+        "module": extract_workbuddy,
+        "state_attr": "WORKBUDDY_STATE_PATH",
+        "no_flag": "no_workbuddy",
+        "path_arg": "workbuddy_db",
+        "path_kwarg": "workbuddy_db",
+        "full_arg": "workbuddy_full",
+        "full_kwarg": "workbuddy_full",
+        "since_arg": "workbuddy_since",
+        "since_kwarg": "workbuddy_since",
+        "missing_key": "db_path",
+        "keep_msg": "keeping other sources",
+        "merged_msg": "WorkBuddy merged: %d workbuddy session(s), %d total",
+    },
+}
 
 
 def parse_args(argv=None):
@@ -146,79 +195,54 @@ def merge_source_result(dataset_path, pricing_path, source_result):
     return len(incoming), len(combined)
 
 
-def run_kilo_sync(args, dataset_path, pricing_path):
-    """Run the Kilo connector and merge. Never blocks other sources."""
-    if getattr(args, "no_kilo", False):
+def run_source_sync(args, spec, dataset_path, pricing_path):
+    """Run one connector and merge. Never blocks other sources."""
+    if getattr(args, spec["no_flag"], False):
         return None
-    kilo_args = argparse.Namespace(
-        kilo_db=getattr(args, "kilo_db", None) or extract_kilo.default_db_path(),
-        kilo_full=bool(getattr(args, "kilo_full", False) or getattr(args, "full", False)),
-        kilo_since=getattr(args, "kilo_since", None) or getattr(args, "since", None),
-        full=bool(getattr(args, "full", False)),
-        since=getattr(args, "since", None),
-    )
-    result = extract_kilo.extract(kilo_args, dataset_path, extract_kilo.KILO_STATE_PATH)
+    source_args = argparse.Namespace(**{
+        spec["path_kwarg"]: getattr(args, spec["path_arg"], None),
+        spec["full_kwarg"]: bool(getattr(args, spec["full_arg"], False)),
+        spec["since_kwarg"]: getattr(args, spec["since_arg"], None),
+        "full": bool(getattr(args, "full", False)),
+        "since": getattr(args, "since", None),
+    })
+    module = spec["module"]
+    result = module.extract(
+        source_args, dataset_path, getattr(module, spec["state_attr"]))
     status = result.get("status")
     if status == "missing":
-        logger.info("Kilo missing (%s): keeping the OpenCode dataset", result.get("db_path"))
+        logger.info("%s missing (%s): %s",
+                    spec["label"], result.get(spec["missing_key"]), spec["keep_msg"])
         return result
     if status == "error":
-        logger.warning("Kilo unavailable (%s): keeping the OpenCode dataset",
-                       result.get("error") or result.get("db_path"))
+        logger.warning("%s unavailable (%s): %s", spec["label"],
+                       result.get("error") or result.get(spec["missing_key"]),
+                       spec["keep_msg"])
         return result
-    n_kilo, n_total = merge_kilo_result(dataset_path, pricing_path, result)
-    logger.info("Kilo merged: %d kilo session(s), %d total", n_kilo, n_total)
+    n_src, n_total = merge_source_result(dataset_path, pricing_path, result)
+    logger.info(spec["merged_msg"], n_src, n_total)
     return result
+
+
+def run_all_sources(args, dataset_path, pricing_path):
+    """Run every enabled connector. A missing/failing source never blocks others."""
+    return [run_source_sync(args, spec, dataset_path, pricing_path)
+            for spec in SOURCES.values()]
+
+
+def run_kilo_sync(args, dataset_path, pricing_path):
+    """Run the Kilo connector and merge. Never blocks other sources."""
+    return run_source_sync(args, SOURCES["kilo"], dataset_path, pricing_path)
 
 
 def run_autoclaw_sync(args, dataset_path, pricing_path):
     """Run the AutoClaw connector and merge. Never blocks other sources."""
-    if getattr(args, "no_autoclaw", False):
-        return None
-    autoclaw_args = argparse.Namespace(
-        autoclaw_dir=getattr(args, "autoclaw_dir", None) or extract_autoclaw.default_dir(),
-        autoclaw_full=bool(getattr(args, "autoclaw_full", False) or getattr(args, "full", False)),
-        autoclaw_since=getattr(args, "autoclaw_since", None) or getattr(args, "since", None),
-        full=bool(getattr(args, "full", False)),
-        since=getattr(args, "since", None),
-    )
-    result = extract_autoclaw.extract(autoclaw_args, dataset_path, extract_autoclaw.AUTOCLAW_STATE_PATH)
-    status = result.get("status")
-    if status == "missing":
-        logger.info("AutoClaw missing (%s): keeping other sources", result.get("telemetry_dir"))
-        return result
-    if status == "error":
-        logger.warning("AutoClaw unavailable (%s): keeping other sources",
-                       result.get("error") or result.get("telemetry_dir"))
-        return result
-    n_auto, n_total = merge_source_result(dataset_path, pricing_path, result)
-    logger.info("AutoClaw merged: %d autoclaw session(s), %d total", n_auto, n_total)
-    return result
+    return run_source_sync(args, SOURCES["autoclaw"], dataset_path, pricing_path)
 
 
 def run_workbuddy_sync(args, dataset_path, pricing_path):
     """Run the WorkBuddy connector and merge. Never blocks other sources."""
-    if getattr(args, "no_workbuddy", False):
-        return None
-    wb_args = argparse.Namespace(
-        workbuddy_db=getattr(args, "workbuddy_db", None) or extract_workbuddy.default_db_path(),
-        workbuddy_full=bool(getattr(args, "workbuddy_full", False) or getattr(args, "full", False)),
-        workbuddy_since=getattr(args, "workbuddy_since", None) or getattr(args, "since", None),
-        full=bool(getattr(args, "full", False)),
-        since=getattr(args, "since", None),
-    )
-    result = extract_workbuddy.extract(wb_args, dataset_path, extract_workbuddy.WORKBUDDY_STATE_PATH)
-    status = result.get("status")
-    if status == "missing":
-        logger.info("WorkBuddy missing (%s): keeping other sources", result.get("db_path"))
-        return result
-    if status == "error":
-        logger.warning("WorkBuddy unavailable (%s): keeping other sources",
-                       result.get("error") or result.get("db_path"))
-        return result
-    n_wb, n_total = merge_source_result(dataset_path, pricing_path, result)
-    logger.info("WorkBuddy merged: %d workbuddy session(s), %d total", n_wb, n_total)
-    return result
+    return run_source_sync(args, SOURCES["workbuddy"], dataset_path, pricing_path)
 
 
 def open_report(path):
@@ -309,9 +333,7 @@ def run(argv=None):
 
     if args.watch:
         extract.extract(extract_args, dataset_path, state_path, pricing_path, budgets_path)
-        run_kilo_sync(args, dataset_path, pricing_path)
-        run_autoclaw_sync(args, dataset_path, pricing_path)
-        run_workbuddy_sync(args, dataset_path, pricing_path)
+        run_all_sources(args, dataset_path, pricing_path)
         build_report.generate_report(dataset_path, report_path, strict=not args.no_strict)
         if not args.no_open:
             open_report(report_path)
