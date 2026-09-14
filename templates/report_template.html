@@ -60,6 +60,10 @@ select:focus-visible,input:focus-visible{outline:2px solid var(--acc);outline-of
 .chart .canvas-wrap{flex:1;min-height:0;position:relative}
 .chart .canvas-wrap canvas{position:absolute;inset:0;width:100%!important;height:100%!important}
 .chart-full{grid-column:1/-1;height:min(340px,70vh)}
+.trio{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:12px}
+.trio>.chart{height:min(300px,60vh)}
+.trio>.card{margin:0;overflow:auto;max-height:min(300px,60vh)}
+@media (max-width:1100px){.trio{grid-template-columns:1fr}.trio>.card{max-height:none}}
 .zoom-overlay{position:fixed;inset:0;background:rgba(5,8,20,.82);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;z-index:9999;padding:24px}
 .zoom-overlay.open{display:flex}
 .zoom-card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;width:min(1100px,96vw);height:min(78vh,820px);display:flex;flex-direction:column;position:relative;box-shadow:0 20px 60px rgba(0,0,0,.5);animation:zoomIn .2s ease-out}
@@ -106,6 +110,7 @@ tr:hover{background:var(--panel2)}
   .chart{height:260px; page-break-inside:avoid}
   .kpis{grid-template-columns:repeat(3,1fr)}
   .charts{grid-template-columns:repeat(2,1fr)}
+  .trio{grid-template-columns:repeat(3,1fr)}
   @page{margin:12mm}
 }
 .compare-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:12px}
@@ -145,17 +150,18 @@ tr:hover{background:var(--panel2)}
 </head>
 <body>
 <header>
-  <h1>AgentLedger &mdash; AI usage</h1>
-  <nav class="tabs" role="tablist" aria-label="Views">
-    <button class="tab-btn active" data-view="overview" role="tab" aria-selected="true">📊 Overview</button>
-    <button class="tab-btn" data-view="modeles" role="tab" aria-selected="false">🧠 Models</button>
-    <button class="tab-btn" data-view="projets" role="tab" aria-selected="false">📁 Projects</button>
-    <button class="tab-btn" data-view="sessions" role="tab" aria-selected="false">📋 Sessions</button>
+  <h1 data-i18n="app_title">AgentLedger &mdash; AI usage</h1>
+  <nav class="tabs" role="tablist" data-i18n-aria="views_aria" aria-label="Views">
+    <button class="tab-btn active" data-view="overview" role="tab" aria-selected="true" data-i18n="tab_overview">📊 Overview</button>
+    <button class="tab-btn" data-view="modeles" role="tab" aria-selected="false" data-i18n="tab_models">🧠 Models</button>
+    <button class="tab-btn" data-view="projets" role="tab" aria-selected="false" data-i18n="tab_projects">📁 Projects</button>
+    <button class="tab-btn" data-view="sessions" role="tab" aria-selected="false" data-i18n="tab_sessions">📋 Sessions</button>
   </nav>
   <span class="sub" id="meta-sub"></span>
-  <button class="fbtn" id="theme-toggle" title="Light/dark theme">🌓</button>
-  <button class="fbtn" id="share-link" title="Copy filtered link">🔗 Share</button>
-  <button class="fbtn" id="print-btn" title="Print / PDF">🖨️ Print</button>
+  <button class="fbtn" id="theme-toggle" data-i18n-title="theme_title" title="Light/dark theme">🌓</button>
+  <button class="fbtn" id="share-link" data-i18n-title="share_title" title="Copy filtered link" data-i18n="share">🔗 Share</button>
+  <button class="fbtn" id="print-btn" data-i18n-title="print_title" title="Print / PDF" data-i18n="print_btn">🖨️ Print</button>
+  <button class="fbtn" id="lang-toggle" title="Language / Langue">FR</button>
   <span style="flex:1"></span>
   <span class="tag" id="db-line"></span>
 </header>
@@ -164,105 +170,106 @@ tr:hover{background:var(--panel2)}
 
   <div id="filterbar">
     <div id="filterbar-quick">
-      <div class="fld"><label>From</label><input type="date" id="f-from"></div>
-      <div class="fld"><label>To</label><input type="date" id="f-to"></div>
-      <div class="fld"><label>Title search</label><input type="text" id="f-q" placeholder="session, task..."></div>
-      <div class="fld"><label>Source</label><select id="f-source"><option value="*">All</option></select></div>
-      <div><button class="fbtn" id="filters-toggle" aria-expanded="false">＋ Filters</button></div>
-      <div><button class="fbtn" id="f-reset">Reset</button></div>
+      <div class="fld"><label data-i18n="f_from">From</label><input type="date" id="f-from"></div>
+      <div class="fld"><label data-i18n="f_to">To</label><input type="date" id="f-to"></div>
+      <div class="fld"><label data-i18n="f_search">Title search</label><input type="text" id="f-q" data-i18n-ph="search_ph" placeholder="session, task..."></div>
+      <div class="fld"><label data-i18n="f_source">Source</label><select id="f-source"><option value="*" data-i18n="opt_all">All</option></select></div>
+      <div><button class="fbtn" id="filters-toggle" aria-expanded="false" data-i18n="filters_show">＋ Filters</button></div>
+      <div><button class="fbtn" id="f-reset" data-i18n="f_reset">Reset</button></div>
     </div>
     <div id="filters-panel" class="collapsed">
   <div class="filters">
-    <div class="fld"><label>Models (multi)</label><select multiple id="f-model"></select></div>
-    <div class="fld"><label>Agent</label><select id="f-agent"><option value="*">All</option></select></div>
-    <div class="fld"><label>Project</label><select id="f-proj"><option value="*">All</option></select></div>
-    <div class="fld"><label>Team</label><select id="f-team"><option value="*">All</option></select></div>
-    <div class="fld"><label>Min cost ($)</label><input type="number" id="f-cmin" min="0" step="0.0001" placeholder="0"></div>
-    <div class="fld"><label>Max cost ($)</label><input type="number" id="f-cmax" min="0" step="0.0001" placeholder="&infin;"></div>
+    <div class="fld"><label data-i18n="f_models">Models (multi)</label><select multiple id="f-model"></select></div>
+    <div class="fld"><label data-i18n="f_agent">Agent</label><select id="f-agent"><option value="*" data-i18n="opt_all">All</option></select></div>
+    <div class="fld"><label data-i18n="f_project">Project</label><select id="f-proj"><option value="*" data-i18n="opt_all">All</option></select></div>
+    <div class="fld"><label data-i18n="f_team">Team</label><select id="f-team"><option value="*" data-i18n="opt_all">All</option></select></div>
+    <div class="fld"><label data-i18n="f_cmin">Min cost ($)</label><input type="number" id="f-cmin" min="0" step="0.0001" placeholder="0"></div>
+    <div class="fld"><label data-i18n="f_cmax">Max cost ($)</label><input type="number" id="f-cmax" min="0" step="0.0001" placeholder="&infin;"></div>
   </div>
     </div>
   </div>
 
-  <section class="view active" id="view-overview" role="tabpanel" aria-label="Overview">
+  <section class="view active" id="view-overview" role="tabpanel" data-i18n-aria="view_overview" aria-label="Overview">
   <div class="kpis" id="kpis" aria-live="polite"></div>
   <div class="budget-grid" id="budget-grid"></div>
-  <div class="card" id="anomaly-card" style="display:none"><h3>Anomalies detected <span class="tag" id="anomaly-count"></span></h3><div id="anomaly-list" class="small"></div></div>
-
+  <div class="trio" id="trio">
+  <div class="card" id="anomaly-card" style="display:none"><h3><span data-i18n="ch_anomalies">Anomalies detected</span> <span class="tag" id="anomaly-count"></span></h3><div id="anomaly-list" class="small"></div></div>
+    <div class="chart" data-chart="c-cost-hist"><div class="chart-head"><h3 data-i18n="ch_hist">Cost / session histogram</h3><div class="chart-tools"><button class="icon-btn" data-zoom="c-cost-hist" data-i18n-title="zoom_btn" title="Zoom">⛶</button><button class="icon-btn" data-png="c-cost-hist" data-i18n-title="png_btn" title="PNG">⬇</button></div></div><div class="canvas-wrap"><canvas id="c-cost-hist"></canvas></div></div>
+    <div class="chart" data-chart="c-cache"><div class="chart-head"><h3 data-i18n="ch_cache">Cache & errors</h3><div class="chart-tools"><button class="icon-btn" data-zoom="c-cache" data-i18n-title="zoom_btn" title="Zoom">⛶</button><button class="icon-btn" data-png="c-cache" data-i18n-title="png_btn" title="PNG">⬇</button></div></div><div class="canvas-wrap"><canvas id="c-cache"></canvas></div></div>
+  </div>
   <div class="charts" id="charts">
-    <div class="chart" data-chart="c-cost-hist"><div class="chart-head"><h3>Cost / session histogram</h3><div class="chart-tools"><button class="icon-btn" data-zoom="c-cost-hist" title="Zoom">⛶</button><button class="icon-btn" data-png="c-cost-hist" title="PNG">⬇</button></div></div><div class="canvas-wrap"><canvas id="c-cost-hist"></canvas></div></div>
-    <div class="chart" data-chart="c-cache"><div class="chart-head"><h3>Cache & errors</h3><div class="chart-tools"><button class="icon-btn" data-zoom="c-cache" title="Zoom">⛶</button><button class="icon-btn" data-png="c-cache" title="PNG">⬇</button></div></div><div class="canvas-wrap"><canvas id="c-cache"></canvas></div></div>
-    <div class="chart chart-full" data-chart="c-forecast"><div class="chart-head"><h3>30-day cost forecast</h3><div class="chart-tools"><button class="icon-btn" data-zoom="c-forecast" title="Zoom">⛶</button><button class="icon-btn" data-png="c-forecast" title="PNG">⬇</button></div></div><div class="canvas-wrap"><canvas id="c-forecast"></canvas></div></div>
-    <div class="chart chart-full" data-chart="c-cost-day"><div class="chart-head"><h3>Cost per day (by model)</h3><div class="chart-tools"><button class="icon-btn" data-zoom="c-cost-day" title="Zoom">⛶</button><button class="icon-btn" data-png="c-cost-day" title="PNG">⬇</button></div></div><div class="canvas-wrap"><canvas id="c-cost-day"></canvas></div></div>
-    <div class="chart chart-full" data-chart="c-tok-day"><div class="chart-head"><h3>Tokens per day (by model)</h3><div class="chart-tools"><button class="icon-btn" data-zoom="c-tok-day" title="Zoom">⛶</button><button class="icon-btn" data-png="c-tok-day" title="PNG">⬇</button></div></div><div class="canvas-wrap"><canvas id="c-tok-day"></canvas></div></div>
+    <div class="chart chart-full" data-chart="c-forecast"><div class="chart-head"><h3 data-i18n="ch_forecast">30-day cost forecast</h3><div class="chart-tools"><button class="icon-btn" data-zoom="c-forecast" data-i18n-title="zoom_btn" title="Zoom">⛶</button><button class="icon-btn" data-png="c-forecast" data-i18n-title="png_btn" title="PNG">⬇</button></div></div><div class="canvas-wrap"><canvas id="c-forecast"></canvas></div></div>
+    <div class="chart chart-full" data-chart="c-cost-day"><div class="chart-head"><h3 data-i18n="ch_cost_day">Cost per day (by model)</h3><div class="chart-tools"><button class="icon-btn" data-zoom="c-cost-day" data-i18n-title="zoom_btn" title="Zoom">⛶</button><button class="icon-btn" data-png="c-cost-day" data-i18n-title="png_btn" title="PNG">⬇</button></div></div><div class="canvas-wrap"><canvas id="c-cost-day"></canvas></div></div>
+    <div class="chart chart-full" data-chart="c-tok-day"><div class="chart-head"><h3 data-i18n="ch_tok_day">Tokens per day (by model)</h3><div class="chart-tools"><button class="icon-btn" data-zoom="c-tok-day" data-i18n-title="zoom_btn" title="Zoom">⛶</button><button class="icon-btn" data-png="c-tok-day" data-i18n-title="png_btn" title="PNG">⬇</button></div></div><div class="canvas-wrap"><canvas id="c-tok-day"></canvas></div></div>
   </div>
   </section>
-  <section class="view" id="view-modeles" role="tabpanel" aria-label="Models">
+  <section class="view" id="view-modeles" role="tabpanel" data-i18n-aria="view_models" aria-label="Models">
   <div class="charts">
-    <div class="chart" data-chart="c-cost-model"><div class="chart-head"><h3>Cost by model</h3><div class="chart-tools"><button class="icon-btn" data-zoom="c-cost-model" title="Zoom">⛶</button><button class="icon-btn" data-png="c-cost-model" title="PNG">⬇</button></div></div><div class="canvas-wrap"><canvas id="c-cost-model"></canvas></div></div>
+    <div class="chart" data-chart="c-cost-model"><div class="chart-head"><h3 data-i18n="ch_cost_model">Cost by model</h3><div class="chart-tools"><button class="icon-btn" data-zoom="c-cost-model" data-i18n-title="zoom_btn" title="Zoom">⛶</button><button class="icon-btn" data-png="c-cost-model" data-i18n-title="png_btn" title="PNG">⬇</button></div></div><div class="canvas-wrap"><canvas id="c-cost-model"></canvas></div></div>
   </div>
-  <div class="card" id="compare-card" style="display:none"><h3>Model comparison (multiple selection)</h3><div class="compare-grid" id="compare-grid"></div><div class="canvas-wrap" style="height:260px;position:relative;margin-top:12px"><canvas id="c-compare"></canvas></div></div>
+  <div class="card" id="compare-card" style="display:none"><h3 data-i18n="compare_title">Model comparison (multiple selection)</h3><div class="compare-grid" id="compare-grid"></div><div class="canvas-wrap" style="height:260px;position:relative;margin-top:12px"><canvas id="c-compare"></canvas></div></div>
 
   <details class="card" id="pricing-panel">
-    <summary>Customize per-model costs (&dollar;/1M tokens)</summary>
-    <div class="note">An empty field = no declared price &rarr; the cost computed by the agent is kept. Click &laquo;&nbsp;Export pricing.json&nbsp;&raquo;, replace <b>config/pricing.json</b>, then rerun <code>python extract.py --full &amp;&amp; python build_report.py</code>.</div>
+    <summary data-i18n="pricing_title">Customize per-model costs (&dollar;/1M tokens)</summary>
+    <div class="note" data-i18n-html="pricing_note">An empty field = no declared price &rarr; the cost computed by the agent is kept. Click &laquo;&nbsp;Export pricing.json&nbsp;&raquo;, replace <b>config/pricing.json</b>, then rerun <code>python extract.py --full &amp;&amp; python build_report.py</code>.</div>
     <div class="pricing-rows" id="pricing-rows"></div>
     <div class="row-actions">
-      <button class="fbtn" id="p-export">Export pricing.json</button>
-      <button class="fbtn" id="p-clear-draft">Clear draft</button>
+      <button class="fbtn" id="p-export" data-i18n="p_export">Export pricing.json</button>
+      <button class="fbtn" id="p-clear-draft" data-i18n="draft_clear">Clear draft</button>
       <span class="small" id="p-status"></span>
     </div>
-    <div class="note">Tip: typing applies <b>live</b> and saves a browser draft. Export to persist on the build side.</div>
+    <div class="note" data-i18n-html="pricing_tip">Tip: typing applies <b>live</b> and saves a browser draft. Export to persist on the build side.</div>
   </details>
   </section>
-  <section class="view" id="view-projets" role="tabpanel" aria-label="Projects">
+  <section class="view" id="view-projets" role="tabpanel" data-i18n-aria="view_projects" aria-label="Projects">
   <div class="charts">
-    <div class="chart" data-chart="c-cost-agent"><div class="chart-head"><h3>Cost by agent</h3><div class="chart-tools"><button class="icon-btn" data-zoom="c-cost-agent" title="Zoom">⛶</button><button class="icon-btn" data-png="c-cost-agent" title="PNG">⬇</button></div></div><div class="canvas-wrap"><canvas id="c-cost-agent"></canvas></div></div>
-    <div class="chart" data-chart="c-cost-team"><div class="chart-head"><h3>Cost by team</h3><div class="chart-tools"><button class="icon-btn" data-zoom="c-cost-team" title="Zoom">⛶</button><button class="icon-btn" data-png="c-cost-team" title="PNG">⬇</button></div></div><div class="canvas-wrap"><canvas id="c-cost-team"></canvas></div></div>
+    <div class="chart" data-chart="c-cost-agent"><div class="chart-head"><h3 data-i18n="ch_cost_agent">Cost by agent</h3><div class="chart-tools"><button class="icon-btn" data-zoom="c-cost-agent" data-i18n-title="zoom_btn" title="Zoom">⛶</button><button class="icon-btn" data-png="c-cost-agent" data-i18n-title="png_btn" title="PNG">⬇</button></div></div><div class="canvas-wrap"><canvas id="c-cost-agent"></canvas></div></div>
+    <div class="chart" data-chart="c-cost-team"><div class="chart-head"><h3 data-i18n="ch_cost_team">Cost by team</h3><div class="chart-tools"><button class="icon-btn" data-zoom="c-cost-team" data-i18n-title="zoom_btn" title="Zoom">⛶</button><button class="icon-btn" data-png="c-cost-team" data-i18n-title="png_btn" title="PNG">⬇</button></div></div><div class="canvas-wrap"><canvas id="c-cost-team"></canvas></div></div>
   </div>
 
   <details class="card" id="budgets-edit-panel">
-    <summary>Monthly budgets per model & project ($)</summary>
-    <div class="note">Set monthly caps (rolling 30d). Empty = no cap. Live + browser draft like pricing.</div>
+    <summary data-i18n="budgets_title">Monthly budgets per model & project ($)</summary>
+    <div class="note" data-i18n="budgets_note">Set monthly caps (rolling 30d). Empty = no cap. Live + browser draft like pricing.</div>
     <div class="pricing-rows" id="budgets-edit-rows"></div>
     <div class="row-actions">
-      <button class="fbtn" id="b-export">Export budgets.json</button>
-      <button class="fbtn" id="b-clear-draft">Clear draft</button>
+      <button class="fbtn" id="b-export" data-i18n="b_export">Export budgets.json</button>
+      <button class="fbtn" id="b-clear-draft" data-i18n="draft_clear">Clear draft</button>
       <span class="small" id="b-status"></span>
     </div>
-    <div class="note">Global = consolidated cap. Per model/project = detailed tracking in the Budgets grid above.</div>
+    <div class="note" data-i18n="budgets_note2">Global = consolidated cap. Per model/project = detailed tracking in the Budgets grid above.</div>
   </details>
   </section>
-  <section class="view" id="view-sessions" role="tabpanel" aria-label="Sessions">
+  <section class="view" id="view-sessions" role="tabpanel" data-i18n-aria="view_sessions" aria-label="Sessions">
   <div class="card" style="margin-bottom:12px;display:flex;gap:8px;align-items:center">
-    <span style="font-size:16px" aria-hidden="true">💬</span><input type="text" id="nlq" aria-label="Natural language search (NLQ)" placeholder="E.g.: big-pickle cost march, OpenCost project, anomaly" style="flex:1;border:none;background:transparent;color:var(--txt);outline:none;font-size:13px">
-    <button class="fbtn" id="nlq-go">Go</button><span class="small" id="nlq-hint" aria-live="polite"></span>
+    <span style="font-size:16px" aria-hidden="true">💬</span><input type="text" id="nlq" data-i18n-aria="nlq_aria" aria-label="Natural language search (NLQ)" data-i18n-ph="nlq_ph" placeholder="E.g.: big-pickle cost march, OpenCost project, anomaly" style="flex:1;border:none;background:transparent;color:var(--txt);outline:none;font-size:13px">
+    <button class="fbtn" id="nlq-go" data-i18n="nlq_go">Go</button><span class="small" id="nlq-hint" aria-live="polite"></span>
   </div>
 
   <div class="card" id="table-card">
     <div class="row-actions">
-      <h3 style="margin:0;flex:1">Detailed sessions <span class="tag" id="t-count" aria-live="polite" aria-atomic="true"></span></h3>
-      <button class="fbtn" id="t-csv">Export CSV</button>
-      <button class="fbtn" id="t-json">Export JSON</button>
+      <h3 style="margin:0;flex:1"><span data-i18n="t_title">Detailed sessions</span> <span class="tag" id="t-count" aria-live="polite" aria-atomic="true"></span></h3>
+      <button class="fbtn" id="t-csv" data-i18n="t_csv">Export CSV</button>
+      <button class="fbtn" id="t-json" data-i18n="t_json">Export JSON</button>
     </div>
     <div class="row-actions" id="t-nav" style="justify-content:center;margin-bottom:8px" aria-live="polite"></div>
     <div class="tab-scroll">
       <table role="table" aria-label="Detailed sessions">
         <thead><tr>
-          <th data-k="time_created" scope="col" aria-sort="descending">Date</th>
-          <th data-k="title" scope="col">Title</th>
-          <th data-k="model_label" scope="col">Model</th>
-          <th data-k="agent" scope="col">Agent</th>
-          <th data-k="project_name" scope="col">Project</th>
-          <th data-k="source" scope="col">Source</th>
-          <th data-k="team" scope="col">Team</th>
-          <th data-k="cost" scope="col" aria-sort="descending">Cost</th>
-          <th data-k="tokens_input" scope="col">Tokens in</th>
-          <th data-k="tokens_output" scope="col">Tokens out</th>
-          <th data-k="tokens_cache_read" scope="col">Cache read</th>
-          <th data-k="tokens_reasoning" scope="col">Reasoning</th>
-          <th data-k="tokens_cache_write" scope="col">Cache written</th>
-          <th data-k="cost_source" scope="col">Cost</th>
-          <th>Notes</th>
+          <th data-k="time_created" scope="col" aria-sort="descending" data-i18n="th_date">Date</th>
+          <th data-k="title" scope="col" data-i18n="th_title">Title</th>
+          <th data-k="model_label" scope="col" data-i18n="th_model">Model</th>
+          <th data-k="agent" scope="col" data-i18n="th_agent">Agent</th>
+          <th data-k="project_name" scope="col" data-i18n="th_project">Project</th>
+          <th data-k="source" scope="col" data-i18n="th_source">Source</th>
+          <th data-k="team" scope="col" data-i18n="th_team">Team</th>
+          <th data-k="cost" scope="col" aria-sort="descending" data-i18n="th_cost">Cost</th>
+          <th data-k="tokens_input" scope="col" data-i18n="th_tin">Tokens in</th>
+          <th data-k="tokens_output" scope="col" data-i18n="th_tout">Tokens out</th>
+          <th data-k="tokens_cache_read" scope="col" data-i18n="kpi_cache">Cache read</th>
+          <th data-k="tokens_reasoning" scope="col" data-i18n="kpi_reason">Reasoning</th>
+          <th data-k="tokens_cache_write" scope="col" data-i18n="th_cwrite">Cache written</th>
+          <th data-k="cost_source" scope="col" data-i18n="th_cost">Cost</th>
+          <th data-i18n="th_notes">Notes</th>
         </tr></thead>
         <tbody id="tbody"></tbody>
       </table>
@@ -271,16 +278,16 @@ tr:hover{background:var(--panel2)}
   </section>
 </div></div></div>
 <div id="drawer-overlay"></div>
-<aside id="drawer" role="dialog" aria-modal="true" aria-label="Session details">
+<aside id="drawer" role="dialog" aria-modal="true" data-i18n-aria="drawer_title" aria-label="Session details">
   <div id="drawer-head">
-    <h3>Session details</h3>
-    <button class="fbtn" id="drawer-close" aria-label="Close">✕ Close</button>
+    <h3 data-i18n="drawer_title">Session details</h3>
+    <button class="fbtn" id="drawer-close" data-i18n-aria="zoom_close" aria-label="Close" data-i18n="drawer_close">✕ Close</button>
   </div>
   <div id="drawer-body"></div>
 </aside>
-<div class="zoom-overlay" id="zoom-overlay" role="dialog" aria-modal="true" aria-label="Enlarged chart">
+<div class="zoom-overlay" id="zoom-overlay" role="dialog" aria-modal="true" data-i18n-aria="zoom_aria" aria-label="Enlarged chart">
   <div class="zoom-card">
-    <button class="zoom-close" id="zoom-close" aria-label="Close">✕</button>
+    <button class="zoom-close" id="zoom-close" data-i18n-aria="zoom_close" aria-label="Close">✕</button>
     <h3 id="zoom-title"></h3>
     <div class="canvas-wrap"><canvas id="zoom-canvas"></canvas></div></div>
 </div>
@@ -296,6 +303,318 @@ const $ = (s) => {
   const el=document.getElementById(s);
   return el || document.querySelector('#'+CSS.escape(s));
 };
+const I18N={
+en:{
+  doc_title:'AgentLedger - AI Usage Report',
+  app_title:'AgentLedger — AI usage',
+  views_aria:'Views',
+  tab_overview:'📊 Overview',
+  tab_models:'🧠 Models',
+  tab_projects:'📁 Projects',
+  tab_sessions:'📋 Sessions',
+  theme_title:'Light/dark theme',
+  share:'🔗 Share',
+  share_title:'Copy filtered link',
+  share_copied:'✓ Copied',
+  share_prompt:'Link to copy:',
+  print_btn:'🖨️ Print',
+  print_title:'Print / PDF',
+  lang_title:'Language / Langue',
+  f_from:'From',
+  f_to:'To',
+  f_search:'Title search',
+  search_ph:'session, task...',
+  f_source:'Source',
+  opt_all:'All',
+  filters_show:'＋ Filters',
+  filters_hide:'－ Filters',
+  f_reset:'Reset',
+  f_models:'Models (multi)',
+  f_agent:'Agent',
+  f_project:'Project',
+  f_team:'Team',
+  f_cmin:'Min cost ($)',
+  f_cmax:'Max cost ($)',
+  view_overview:'Overview',
+  view_models:'Models',
+  view_projects:'Projects',
+  view_sessions:'Sessions',
+  ch_anomalies:'Anomalies detected',
+  ch_hist:'Cost / session histogram',
+  ch_cache:'Cache & errors',
+  ch_forecast:'30-day cost forecast',
+  ch_cost_day:'Cost per day (by model)',
+  ch_tok_day:'Tokens per day (by model)',
+  ch_cost_model:'Cost by model',
+  ch_cost_agent:'Cost by agent',
+  ch_cost_team:'Cost by team',
+  zoom_btn:'Zoom',
+  png_btn:'PNG',
+  zoom_close:'Close',
+  zoom_aria:'Enlarged chart',
+  drawer_title:'Session details',
+  drawer_close:'✕ Close',
+  kpi_total:'Total cost',
+  kpi_input:'Input tokens',
+  kpi_output:'Output tokens',
+  kpi_cache:'Cache read',
+  kpi_reason:'Reasoning',
+  kpi_cpm:'Cost / 1k tokens',
+  kpi_sessions:'Sessions',
+  kpi_tps:'Tokens / session',
+  kpi_cpp:'Cost / project',
+  kpi_save:'Savings',
+  kpi_sessions_u:'sessions',
+  kpi_avg:'avg',
+  kpi_projects:'{n} project(s)',
+  kpi_input_pct:'{x}% of input tokens',
+  kpi_output_pct:'{x}% of output volume',
+  kpi_vs:'vs reported',
+  kpi_none:'No sessions',
+  b_global:'Global (30d)',
+  b_project:'Project {p}',
+  b_model:'Model {m}',
+  b_remaining:'Remaining {x}',
+  b_over:'Over by {x}',
+  anom_spike:'+30% vs 7d',
+  fc_empty:'Not enough data (≥7d)',
+  fc_title:'30-day forecast: {c} (slope {s}/d)',
+  ds_history:'History',
+  ds_forecast:'30-day forecast',
+  cache_uncached:'Input (uncached)',
+  compare_title:'Model comparison (multiple selection)',
+  pricing_title:'Customize per-model costs ($/1M tokens)',
+  pricing_note:'An empty field = no declared price → the cost computed by the agent is kept. Click « Export pricing.json », replace <b>config/pricing.json</b>, then rerun <code>python extract.py --full && python build_report.py</code>.',
+  p_export:'Export pricing.json',
+  draft_clear:'Clear draft',
+  pricing_tip:'Tip: typing applies <b>live</b> and saves a browser draft. Export to persist on the build side.',
+  p_exported:'pricing.json exported ({n} model(s)) - replace config/pricing.json then: python extract.py --full && python build_report.py',
+  p_cleared:'Draft cleared.',
+  budgets_title:'Monthly budgets per model & project ($)',
+  budgets_note:'Set monthly caps (rolling 30d). Empty = no cap. Live + browser draft like pricing.',
+  b_export:'Export budgets.json',
+  budgets_note2:'Global = consolidated cap. Per model/project = detailed tracking in the Budgets grid above.',
+  b_exported:'budgets.json exported ({n} models, {m} projects)',
+  b_cleared:'Budgets draft cleared.',
+  nlq_aria:'Natural language search (NLQ)',
+  nlq_ph:'E.g.: big-pickle cost march, OpenCost project, anomaly',
+  nlq_go:'Go',
+  nlq_default:'Filters applied',
+  hint_model:'model',
+  hint_project:'project',
+  hint_team:'team',
+  hint_anom:'anomalies',
+  hint_cost:'cost',
+  t_title:'Detailed sessions',
+  t_csv:'Export CSV',
+  t_json:'Export JSON',
+  th_date:'Date',
+  th_title:'Title',
+  th_model:'Model',
+  th_agent:'Agent',
+  th_project:'Project',
+  th_source:'Source',
+  th_team:'Team',
+  th_cost:'Cost',
+  th_tin:'Tokens in',
+  th_tout:'Tokens out',
+  th_cwrite:'Cache written',
+  th_notes:'Notes',
+  t_noresults:'No results',
+  t_prev:'← Prev',
+  t_next:'Next →',
+  t_page:'page {a}/{b}',
+  cost_custom:'custom',
+  note_add:'Add note',
+  note_prompt:'Note for {id}:',
+  d_session:'Session',
+  d_tokinout:'Tokens in/out',
+  d_cache:'Cache read/written',
+  meta_gen:'Generated {d} (UTC) • {n} sessions',
+  meta_src:'Source: {p}',
+  meta_pricing:'• {n} model(s) with custom pricing',
+  meta_live:'• {n} (live)',
+  pe_input:'input',
+  pe_output:'output',
+  pe_cr:'cache read',
+  pe_cw:'cache write',
+  pe_re:'reasoning',
+  pe_clear:'Clear',
+  be_global:'Global',
+  be_monthly:'monthly $',
+  be_project:'{p} (project)',
+  untitled:'(untitled)',
+  t_of:'of',
+  meta_updated:'• updated {d}',
+},
+fr:{
+  doc_title:'AgentLedger - Rapport d’usage IA',
+  app_title:'AgentLedger — Utilisation IA',
+  views_aria:'Vues',
+  tab_overview:'📊 Aperçu',
+  tab_models:'🧠 Modèles',
+  tab_projects:'📁 Projets',
+  tab_sessions:'📋 Sessions',
+  theme_title:'Thème clair/sombre',
+  share:'🔗 Partager',
+  share_title:'Copier le lien filtré',
+  share_copied:'✓ Copié',
+  share_prompt:'Lien à copier :',
+  print_btn:'🖨️ Imprimer',
+  print_title:'Imprimer / PDF',
+  lang_title:'Language / Langue',
+  f_from:'De',
+  f_to:'À',
+  f_search:'Recherche titre',
+  search_ph:'session, tâche...',
+  f_source:'Source',
+  opt_all:'Tout',
+  filters_show:'＋ Filtres',
+  filters_hide:'－ Filtres',
+  f_reset:'Réinitialiser',
+  f_models:'Modèles (multi)',
+  f_agent:'Agent',
+  f_project:'Projet',
+  f_team:'Équipe',
+  f_cmin:'Coût min ($)',
+  f_cmax:'Coût max ($)',
+  view_overview:'Aperçu',
+  view_models:'Modèles',
+  view_projects:'Projets',
+  view_sessions:'Sessions',
+  ch_anomalies:'Anomalies détectées',
+  ch_hist:'Histogramme coût / session',
+  ch_cache:'Cache et erreurs',
+  ch_forecast:'Prévision de coût à 30 jours',
+  ch_cost_day:'Coût par jour (par modèle)',
+  ch_tok_day:'Tokens par jour (par modèle)',
+  ch_cost_model:'Coût par modèle',
+  ch_cost_agent:'Coût par agent',
+  ch_cost_team:'Coût par équipe',
+  zoom_btn:'Zoom',
+  png_btn:'PNG',
+  zoom_close:'Fermer',
+  zoom_aria:'Graphique agrandi',
+  drawer_title:'Détails de la session',
+  drawer_close:'✕ Fermer',
+  kpi_total:'Coût total',
+  kpi_input:'Tokens d’entrée',
+  kpi_output:'Tokens de sortie',
+  kpi_cache:'Cache lu',
+  kpi_reason:'Raisonnement',
+  kpi_cpm:'Coût / 1k tokens',
+  kpi_sessions:'Sessions',
+  kpi_tps:'Tokens / session',
+  kpi_cpp:'Coût / projet',
+  kpi_save:'Économies',
+  kpi_sessions_u:'sessions',
+  kpi_avg:'moy.',
+  kpi_projects:'{n} projet(s)',
+  kpi_input_pct:'{x} % des tokens d’entrée',
+  kpi_output_pct:'{x} % du volume de sortie',
+  kpi_vs:'vs déclaré',
+  kpi_none:'Aucune session',
+  b_global:'Global (30 j)',
+  b_project:'Projet {p}',
+  b_model:'Modèle {m}',
+  b_remaining:'Restant {x}',
+  b_over:'Dépassement de {x}',
+  anom_spike:'+30 % vs 7 j',
+  fc_empty:'Données insuffisantes (≥7 j)',
+  fc_title:'Prévision 30 j : {c} (pente {s}/j)',
+  ds_history:'Historique',
+  ds_forecast:'Prévision 30 j',
+  cache_uncached:'Entrée (non caché)',
+  compare_title:'Comparaison de modèles (sélection multiple)',
+  pricing_title:'Personnaliser les coûts par modèle ($/1M tokens)',
+  pricing_note:'Un champ vide = aucun prix déclaré → le coût calculé par l’agent est conservé. Cliquez sur « Exporter pricing.json », remplacez <b>config/pricing.json</b>, puis relancez <code>python extract.py --full && python build_report.py</code>.',
+  p_export:'Exporter pricing.json',
+  draft_clear:'Effacer le brouillon',
+  pricing_tip:'Astuce : la saisie s’applique <b>en direct</b> et enregistre un brouillon navigateur. Exportez pour persister côté build.',
+  p_exported:'pricing.json exporté ({n} modèle(s)) — remplacez config/pricing.json puis : python extract.py --full && python build_report.py',
+  p_cleared:'Brouillon effacé.',
+  budgets_title:'Budgets mensuels par modèle et projet ($)',
+  budgets_note:'Définissez des plafonds mensuels (30 j glissants). Vide = aucun plafond. Live + brouillon navigateur comme pour les prix.',
+  b_export:'Exporter budgets.json',
+  budgets_note2:'Global = plafond consolidé. Par modèle/projet = suivi détaillé dans la grille Budgets ci-dessus.',
+  b_exported:'budgets.json exporté ({n} modèles, {m} projets)',
+  b_cleared:'Brouillon des budgets effacé.',
+  nlq_aria:'Recherche en langage naturel (NLQ)',
+  nlq_ph:'Ex. : coût big-pickle mars, projet OpenCost, anomalie',
+  nlq_go:'OK',
+  nlq_default:'Filtres appliqués',
+  hint_model:'modèle',
+  hint_project:'projet',
+  hint_team:'équipe',
+  hint_anom:'anomalies',
+  hint_cost:'coût',
+  t_title:'Sessions détaillées',
+  t_csv:'Exporter CSV',
+  t_json:'Exporter JSON',
+  th_date:'Date',
+  th_title:'Titre',
+  th_model:'Modèle',
+  th_agent:'Agent',
+  th_project:'Projet',
+  th_source:'Source',
+  th_team:'Équipe',
+  th_cost:'Coût',
+  th_tin:'Tokens entrants',
+  th_tout:'Tokens sortants',
+  th_cwrite:'Cache écrit',
+  th_notes:'Notes',
+  t_noresults:'Aucun résultat',
+  t_prev:'← Préc.',
+  t_next:'Suivant →',
+  t_page:'page {a}/{b}',
+  cost_custom:'perso',
+  note_add:'Ajouter une note',
+  note_prompt:'Note pour {id} :',
+  d_session:'Session',
+  d_tokinout:'Tokens entrants/sortants',
+  d_cache:'Cache lu/écrit',
+  meta_gen:'Généré {d} (UTC) • {n} sessions',
+  meta_src:'Source : {p}',
+  meta_pricing:'• {n} modèle(s) à prix personnalisé',
+  meta_live:'• {n} (live)',
+  pe_input:'entrée',
+  pe_output:'sortie',
+  pe_cr:'cache lu',
+  pe_cw:'cache écrit',
+  pe_re:'raisonnement',
+  pe_clear:'Effacer',
+  be_global:'Global',
+  be_monthly:'mensuel $',
+  be_project:'{p} (projet)',
+  untitled:'(sans titre)',
+  t_of:'sur',
+  meta_updated:'• mis à jour {d}',
+}
+};
+let LANG='en';
+try{
+  const _qp=new URLSearchParams(location.search).get('lang');
+  const _sv=localStorage.getItem('agentledger_lang');
+  LANG=(_qp||_sv||((navigator.language||'en').toLowerCase().startsWith('fr')?'fr':'en'));
+  if(!I18N[LANG]) LANG='en';
+}catch(e){LANG='en';}
+function t(k){ const d=I18N[LANG]||{}; if(d[k]!=null) return d[k]; const e=I18N.en||{}; return e[k]!=null?e[k]:k; }
+function tf(k,m){ let s=t(k); for(const key in (m||{})) s=(''+s).split('{'+key+'}').join(m[key]); return s; }
+function applyI18n(){
+  document.querySelectorAll('[data-i18n]').forEach(el=>{ el.textContent=t(el.getAttribute('data-i18n')); });
+  document.querySelectorAll('[data-i18n-html]').forEach(el=>{ el.innerHTML=t(el.getAttribute('data-i18n-html')); });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el=>{ el.setAttribute('placeholder', t(el.getAttribute('data-i18n-ph'))); });
+  document.querySelectorAll('[data-i18n-title]').forEach(el=>{ el.setAttribute('title', t(el.getAttribute('data-i18n-title'))); });
+  document.querySelectorAll('[data-i18n-aria]').forEach(el=>{ el.setAttribute('aria-label', t(el.getAttribute('data-i18n-aria'))); });
+  document.documentElement.lang=LANG;
+  document.title=t('doc_title');
+  const lb=$('#lang-toggle'); if(lb) lb.textContent=(LANG==='fr'?'EN':'FR');
+}
+function setLang(l){
+  LANG=I18N[l]?l:'en';
+  try{ localStorage.setItem('agentledger_lang',LANG); }catch(e){}
+  applyI18n(); render(); buildPricingRows(); buildBudgetsEditRows();
+}
 function getTeam(s){ return (s.team || (s.project_name||'').split('/')[0].split('-')[0] || s.agent || 'default').trim() || 'default'; }
 const state = { view:"overview", model:new Set(), agent:"*", proj:"*", team:"*", src:"*", from:null, to:null, cmin:null, cmax:null, q:"", sort:"time_created", sortDir:-1, page:0, pageSize:100 };
 const VIEWS = ["overview","modeles","projets","sessions"];
@@ -324,18 +643,18 @@ function openDrawer(sid){
   const s=all.find(x=>String(x.id)===String(sid)) || SESSIONS.find(x=>String(x.id)===String(sid));
   if(!s) return;
   const rows=[
-    ['Title', escapeHtml(s.title||'(untitled)')],
-    ['Source', escapeHtml(s.source||'opencode')],
-    ['Session', escapeHtml(s.source_session_id||s.id||'')],
-    ['Date', dayFrom(s.time_created||0)],
-    ['Model', escapeHtml(s.model_label||'?')],
-    ['Agent', escapeHtml(s.agent||'')],
-    ['Project', escapeHtml(s.project_name||'')],
-    ['Team', escapeHtml(getTeam(s))],
-    ['Cost', fmtCost(s.cost)+' ('+escapeHtml(s.cost_source||'')+')'],
-    ['Tokens in/out', fmtInt(s.tokens_input)+' / '+fmtInt(s.tokens_output)],
-    ['Reasoning', fmtInt(s.tokens_reasoning)],
-    ['Cache read/written', fmtInt(s.tokens_cache_read)+' / '+fmtInt(s.tokens_cache_write)],
+    [t('th_title'), escapeHtml(s.title||t('untitled'))],
+    [t('th_source'), escapeHtml(s.source||'opencode')],
+    [t('d_session'), escapeHtml(s.source_session_id||s.id||'')],
+    [t('th_date'), dayFrom(s.time_created||0)],
+    [t('th_model'), escapeHtml(s.model_label||'?')],
+    [t('th_agent'), escapeHtml(s.agent||'')],
+    [t('th_project'), escapeHtml(s.project_name||'')],
+    [t('th_team'), escapeHtml(getTeam(s))],
+    [t('th_cost'), fmtCost(s.cost)+' ('+escapeHtml(s.cost_source||'')+')'],
+    [t('d_tokinout'), fmtInt(s.tokens_input)+' / '+fmtInt(s.tokens_output)],
+    [t('kpi_reason'), fmtInt(s.tokens_reasoning)],
+    [t('d_cache'), fmtInt(s.tokens_cache_read)+' / '+fmtInt(s.tokens_cache_write)],
   ];
   document.getElementById('drawer-body').innerHTML='<dl>'+rows.map(r=>'<dt>'+r[0]+'</dt><dd>'+r[1]+'</dd>').join('')+'</dl>';
   document.getElementById('drawer').classList.add('open');
@@ -360,11 +679,13 @@ function pushURL(){
   if(state.cmin!=null) p.set('cmin', state.cmin);
   if(state.cmax!=null) p.set('cmax', state.cmax);
   if(state.model.size && state.model.size !== new Set(SESSIONS.map(s=>s.model_label||'?')).size) p.set('models', [...state.model].join(','));
+  if(LANG && LANG!=='en') p.set('lang', LANG);
   const s=p.toString();
   history.replaceState(null,'', s? '?'+s : location.pathname);
 }
 function loadFromURL(){
   const p=new URLSearchParams(location.search);
+  if(p.get('lang') && I18N[p.get('lang')]) LANG=p.get('lang');
   if(p.get('view') && VIEWS.includes(p.get('view'))) state.view=p.get('view');
   if(p.get('from')) state.from=p.get('from');
   if(p.get('to')) state.to=p.get('to');
@@ -401,7 +722,7 @@ function tsSec(ts){ const v=Number(ts)||0; return v>100000000000? Math.floor(v/1
 
 function initFilters(){
   if (!SESSIONS.length){
-    $('#kpis').innerHTML='<div class="kpi"><div class="l">No sessions</div><div class="v">0</div></div>';
+    $('#kpis').innerHTML='<div class="kpi"><div class="l">'+t('kpi_none')+'</div><div class="v">0</div></div>';
     $('#f-from').value=''; $('#f-to').value='';
     return;
   }
@@ -465,19 +786,19 @@ function parseNLQ(q){
   let hint=[];
   // model (substring match)
   const models=[...new Set(SESSIONS.map(s=>s.model_label))];
-  for(const m of models){ const ml=m.toLowerCase(); const id=m.split('/').pop().toLowerCase(); if(q.includes(ml) || q.includes(id)){ state.model=new Set([m]); const sel=$('#f-model'); if(sel) [...sel.options].forEach(o=>o.selected=o.value===m); hint.push('model '+m); break; } }
+  for(const m of models){ const ml=m.toLowerCase(); const id=m.split('/').pop().toLowerCase(); if(q.includes(ml) || q.includes(id)){ state.model=new Set([m]); const sel=$('#f-model'); if(sel) [...sel.options].forEach(o=>o.selected=o.value===m); hint.push(t('hint_model')+' '+m); break; } }
   // project
   const projs=[...new Set(SESSIONS.map(s=>s.project_name))];
-  for(const p of projs){ if(p && (q.includes(p.toLowerCase()) || p.toLowerCase().includes(q))){ state.proj=p; $('#f-proj').value=p; hint.push('project '+p); break; } }
+  for(const p of projs){ if(p && (q.includes(p.toLowerCase()) || p.toLowerCase().includes(q))){ state.proj=p; $('#f-proj').value=p; hint.push(t('hint_project')+' '+p); break; } }
   // team
   const teams=[...new Set(SESSIONS.map(s=>getTeam(s)))];
-  for(const t of teams){ if(q.includes(t.toLowerCase()) || t.toLowerCase().includes(q)){ state.team=t; $('#f-team').value=t; hint.push('team '+t); break; } }
+  for(const t of teams){ if(q.includes(t.toLowerCase()) || t.toLowerCase().includes(q)){ state.team=t; $('#f-team').value=t; hint.push(t('hint_team')+' '+t); break; } }
   // month (english + french)
   const months={january:'01',janvier:'01',february:'02',fevrier:'02',march:'03',mars:'03',april:'04',avril:'04',may:'05',mai:'05',june:'06',juin:'06',july:'07',juillet:'07',august:'08',aout:'08',september:'09',septembre:'09',october:'10',octobre:'10',november:'11',novembre:'11',december:'12',decembre:'12'};
   for(const [name,num] of Object.entries(months)){ if(q.includes(name)){ const year=q.match(/20\d{2}/)?.[0] || new Date().getUTCFullYear(); state.from=year+'-'+num+'-01'; state.to=year+'-'+num+'-'+new Date(year,num,0).getUTCDate().toString().padStart(2,'0'); $('#f-from').value=state.from; $('#f-to').value=state.to; hint.push(name+' '+year); break; } }
-  if(q.includes('anomalie')||q.includes('anomaly')){ switchView('overview', true); document.getElementById('anomaly-card')?.scrollIntoView({behavior:'smooth'}); hint.push('anomalies'); }
-  if(q.includes('coût')||q.includes('cout')||q.includes('cost')) hint.push('cost');
-  return hint.join(', ') || 'Filters applied';
+  if(q.includes('anomalie')||q.includes('anomaly')){ switchView('overview', true); document.getElementById('anomaly-card')?.scrollIntoView({behavior:'smooth'}); hint.push(t('hint_anom')); }
+  if(q.includes('coût')||q.includes('cout')||q.includes('cost')) hint.push(t('hint_cost'));
+  return hint.join(', ') || t('nlq_default');
 }
 function getNotes(){ try{ return JSON.parse(localStorage.getItem('session_notes')||'{}'); }catch(e){ return {}; } }
 function setNote(id, txt){
@@ -541,16 +862,16 @@ function renderKPIs(list){
   const orig = list.reduce((a,s)=>a+Number(s.cost_original ?? s.cost ?? 0),0);
   const saving = orig - cost;
   const items=[
-    ['Total cost', fmtCost(cost), list.length+' sessions'],
-    ['Input tokens', fmtInt(tin), ''],
-    ['Output tokens', fmtInt(tout), ''],
-    ['Cache read', fmtInt(tcach), ratio.toFixed(1)+'% of input tokens'],
-    ['Reasoning', fmtInt(treas), reasonRatio.toFixed(1)+'% of output volume'],
-    ['Cost / 1k tokens', fmtCost(cpm), ''],
-    ['Sessions', fmtInt(list.length), ''],
-    ['Tokens / session', fmtInt(tps), 'avg'],
-    ['Cost / project', fmtCost(cpp), projN+' project(s)'],
-    ['Savings', fmtCost(saving), saving>0? 'vs reported' : ''],
+    [t('kpi_total'), fmtCost(cost), list.length+' '+t('kpi_sessions_u')],
+    [t('kpi_input'), fmtInt(tin), ''],
+    [t('kpi_output'), fmtInt(tout), ''],
+    [t('kpi_cache'), fmtInt(tcach), tf('kpi_input_pct',{x:ratio.toFixed(1)})],
+    [t('kpi_reason'), fmtInt(treas), tf('kpi_output_pct',{x:reasonRatio.toFixed(1)})],
+    [t('kpi_cpm'), fmtCost(cpm), ''],
+    [t('kpi_sessions'), fmtInt(list.length), ''],
+    [t('kpi_tps'), fmtInt(tps), t('kpi_avg')],
+    [t('kpi_cpp'), fmtCost(cpp), tf('kpi_projects',{n:projN})],
+    [t('kpi_save'), fmtCost(saving), saving>0? t('kpi_vs') : ''],
   ];
   $('#kpis').innerHTML = items.map(([l,v,d],i)=>
     '<div class="kpi"><div class="l">'+l+'</div><div class="v">'+v+'</div><div class="d">'+d+'</div><div class="kpi-spark"><canvas id="spark-'+i+'" width="120" height="28"></canvas></div></div>').join('');
@@ -601,20 +922,20 @@ function renderBudgets(list){
     const pct=Math.min(100, (used/budget)*100);
     const cls = pct>=100?'bad': pct>=80?'warn':'ok';
     const rest=budget-used;
-    return '<div class="budget-card"><h4>'+escapeHtml(label)+'</h4><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--mut)"><span>'+fmtCost(used)+' / '+fmtCost(budget)+'</span><span>'+pct.toFixed(0)+'%</span></div><div class="budget-bar"><div class="budget-bar-fill '+cls+'" style="width:'+pct+'%"></div></div><div class="small">'+(rest>=0? 'Remaining '+fmtCost(rest) : 'Over by '+fmtCost(-rest))+'</div></div>';
+    return '<div class="budget-card"><h4>'+escapeHtml(label)+'</h4><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--mut)"><span>'+fmtCost(used)+' / '+fmtCost(budget)+'</span><span>'+pct.toFixed(0)+'%</span></div><div class="budget-bar"><div class="budget-bar-fill '+cls+'" style="width:'+pct+'%"></div></div><div class="small">'+(rest>=0? tf('b_remaining',{x:fmtCost(rest)}) : tf('b_over',{x:fmtCost(-rest)}))+'</div></div>';
   };
   let html='';
-  if(BUDGETS.global?.monthly) html+=mkBar('Global (30d)', monthCost, BUDGETS.global.monthly);
+  if(BUDGETS.global?.monthly) html+=mkBar(t('b_global'), monthCost, BUDGETS.global.monthly);
   const byProj=BUDGETS.by_project||{};
   for(const [proj,b] of Object.entries(byProj)){
     const used=list.filter(s=>s.project_name===proj).reduce((a,s)=>a+Number(s.cost||0),0);
     // with an active time filter, also show 30d; otherwise the filtered total
-    html+=mkBar('Project '+proj, used, b.monthly);
+    html+=mkBar(tf('b_project',{p:proj}), used, b.monthly);
   }
   const byModel=BUDGETS.by_model||{};
   for(const [mod,b] of Object.entries(byModel)){
     const used=list.filter(s=>s.model_label===mod).reduce((a,s)=>a+Number(s.cost||0),0);
-    html+=mkBar('Model '+mod, used, b.monthly);
+    html+=mkBar(tf('b_model',{m:mod}), used, b.monthly);
   }
   grid.innerHTML=html;
 }
@@ -640,7 +961,7 @@ function detectAnomalies(list){
   for(let i=7;i<days.length;i++){
     const win=vals.slice(i-7,i); const avg=win.reduce((a,b)=>a+b,0)/7;
     if(avg>0 && vals[i] > avg*1.3){
-      if(!anomal.find(a=>a.d===days[i][0])) anomal.push({d:days[i][0],v:vals[i],z:0,reason:'+30% vs 7d'});
+      if(!anomal.find(a=>a.d===days[i][0])) anomal.push({d:days[i][0],v:vals[i],z:0,reason:t('anom_spike')});
     }
   }
   if(!anomal.length){ card.style.display='none'; return; }
@@ -662,7 +983,7 @@ function renderForecast(list){
   list.forEach(s=>{ const d=dayFrom(s.time_created||0); byDay.set(d,(byDay.get(d)||0)+Number(s.cost||0)); });
   const days=[...byDay.entries()].sort((a,b)=>a[0].localeCompare(b[0]));
   if(days.length<7){
-    mkChart('c-forecast', {type:'bar', data:{labels:[], datasets:[]}, options:{responsive:true, maintainAspectRatio:false, plugins:{title:{display:true,text:'Not enough data (≥7d)', color:'#8b92b5'}}}});
+    mkChart('c-forecast', {type:'bar', data:{labels:[], datasets:[]}, options:{responsive:true, maintainAspectRatio:false, plugins:{title:{display:true,text:t('fc_empty'), color:'#8b92b5'}}}});
     return;
   }
   const vals=days.map(d=>d[1]);
@@ -692,12 +1013,12 @@ function renderForecast(list){
   mkChart('c-forecast', {type:'bar', data:{
     labels: allLabels,
     datasets:[
-      {label:'History', data: extendedHist, backgroundColor:'#6c8bff', borderColor:'#6c8bff', type:'bar'},
-      {label:'30-day forecast', data: extendedForecast, backgroundColor:'rgba(61,220,151,0.6)', borderColor:'#3ddc97', borderDash:[6,4], type:'line', fill:false, tension:0.2, pointRadius:2}
+      {label:t('ds_history'), data: extendedHist, backgroundColor:'#6c8bff', borderColor:'#6c8bff', type:'bar'},
+      {label:t('ds_forecast'), data: extendedForecast, backgroundColor:'rgba(61,220,151,0.6)', borderColor:'#3ddc97', borderDash:[6,4], type:'line', fill:false, tension:0.2, pointRadius:2}
     ]
   }, options:{
     responsive:true, maintainAspectRatio:false, animation:CHART_ANIM,
-    plugins:{legend:{labels:{color:'#8b92b5',font:{size:10},boxWidth:12,padding:12}}, tooltip:CHART_TOOLTIP, title:{display:true, text:'30-day forecast: '+fmtCost(sumForecast)+' (slope '+a.toFixed(4)+'/d)', color:'#8b92b5', font:{size:11}}},
+    plugins:{legend:{labels:{color:'#8b92b5',font:{size:10},boxWidth:12,padding:12}}, tooltip:CHART_TOOLTIP, title:{display:true, text:tf('fc_title',{c:fmtCost(sumForecast),s:a.toFixed(4)}), color:'#8b92b5', font:{size:11}}},
     scales:{x:{ticks:{color:'#8b92b5', maxTicksLimit:12, maxRotation:30}, grid:{color:'rgba(42,48,82,0.2)'}}, y:{ticks:{color:'#8b92b5'}, grid:{color:'rgba(42,48,82,0.3)'}}}
   }});
 }
@@ -772,7 +1093,7 @@ function renderCharts(list){
   const tin=list.reduce((a,s)=>a+Number(s.tokens_input||0),0);
   const saw=list.length;
   const errs=list.filter(s=>s.error).length;
-  cfg = {type:'doughnut', data:{labels:['Cache read','Input (uncached)'], datasets:[{ data:[tcr, Math.max(0,tin)], backgroundColor:[PALETTE[0],PALETTE[2]], borderColor:'#171b2e', borderWidth:2, hoverOffset:6 }]}, options:{ responsive:true, maintainAspectRatio:false, animation:CHART_ANIM, cutout:'58%', plugins:{legend:{position:'right',labels:{color:'#8b92b5',font:{size:10},padding:10,boxWidth:12}}, tooltip:{...CHART_TOOLTIP, callbacks:{label:(c)=>' '+c.label+': '+fmtInt(c.parsed)+' tok'}}} }};
+  cfg = {type:'doughnut', data:{labels:[t('kpi_cache'),t('cache_uncached')], datasets:[{ data:[tcr, Math.max(0,tin)], backgroundColor:[PALETTE[0],PALETTE[2]], borderColor:'#171b2e', borderWidth:2, hoverOffset:6 }]}, options:{ responsive:true, maintainAspectRatio:false, animation:CHART_ANIM, cutout:'58%', plugins:{legend:{position:'right',labels:{color:'#8b92b5',font:{size:10},padding:10,boxWidth:12}}, tooltip:{...CHART_TOOLTIP, callbacks:{label:(c)=>' '+c.label+': '+fmtInt(c.parsed)+' tok'}}} }};
   mkChart('c-cache', cfg);
 
   // 7. 30d forecast
@@ -794,7 +1115,7 @@ function renderTable(list){
   const total=rows.length;
   const start=state.page*state.pageSize, end=Math.min(total, start+state.pageSize);
   const pageRows=rows.slice(start,end);
-  $('#t-count').textContent='('+total+') '+(total>state.pageSize? (start+1)+'-'+end+' of '+total : '');
+  $('#t-count').textContent='('+total+') '+(total>state.pageSize? (start+1)+'-'+end+' '+t('t_of')+' '+total : '');
   const notes=getNotes();
   $('#tbody').innerHTML = pageRows.map(s=>{
     const note=notes[s.id]||'';
@@ -811,21 +1132,21 @@ function renderTable(list){
     '<td>'+fmtInt(s.tokens_cache_read)+'</td>'+
     '<td>'+fmtInt(s.tokens_reasoning)+'</td>'+
     '<td>'+fmtInt(s.tokens_cache_write)+'</td>'+
-    '<td>'+(s.cost_source==='pricing' || String(s.cost_source||'').startsWith('pricing')? '<span class="pos">custom</span>' : '<span class="neg">'+escapeHtml(s.cost_source||s.source||'opencode')+'</span>')+'</td>'+
-    '<td><button class="fbtn" data-note="'+s.id+'" title="'+escapeHtml(note||'Add note')+'">'+(note?'📝':'🗒️')+'</button></td></tr>';
-  }).join('') || '<tr><td colspan="99" style="text-align:center;color:var(--mut)">No results</td></tr>';
+    '<td>'+(s.cost_source==='pricing' || String(s.cost_source||'').startsWith('pricing')? '<span class="pos">'+t('cost_custom')+'</span>' : '<span class="neg">'+escapeHtml(s.cost_source||s.source||'opencode')+'</span>')+'</td>'+
+    '<td><button class="fbtn" data-note="'+s.id+'" title="'+escapeHtml(note||t('note_add'))+'">'+(note?'📝':'🗒️')+'</button></td></tr>';
+  }).join('') || '<tr><td colspan="99" style="text-align:center;color:var(--mut)">'+t('t_noresults')+'</td></tr>';
   document.querySelectorAll('[data-note]').forEach(b=>{
     b.addEventListener('click', ()=>{
       const id=b.dataset.note;
       const cur=getNotes()[id]||'';
-      const txt=prompt('Note for '+id+':', cur);
+      const txt=prompt(tf('note_prompt',{id:id}), cur);
       if(txt!==null){ setNote(id, txt); renderTable(list); }
     });
   });
   const nav=$('#t-nav');
   if(nav){
     const pages=Math.ceil(total/state.pageSize);
-    nav.innerHTML = pages<=1? '' : '<button class="fbtn" id="t-prev" '+(state.page===0?'disabled':'')+'>← Prev</button> <span class="small">page '+(state.page+1)+'/'+pages+'</span> <button class="fbtn" id="t-next" '+(state.page>=pages-1?'disabled':'')+'>Next →</button>';
+    nav.innerHTML = pages<=1? '' : '<button class="fbtn" id="t-prev" '+(state.page===0?'disabled':'')+'>'+t('t_prev')+'</button> <span class="small">'+tf('t_page',{a:(state.page+1),b:pages})+'</span> <button class="fbtn" id="t-next" '+(state.page>=pages-1?'disabled':'')+'>'+t('t_next')+'</button>';
     const prev=nav.querySelector('#t-prev'), next=nav.querySelector('#t-next');
     if(prev) prev.onclick=()=>{ if(state.page>0){state.page--; renderTable(list);} };
     if(next) next.onclick=()=>{ if(state.page<pages-1){state.page++; renderTable(list);} };
@@ -877,8 +1198,8 @@ function render(){
   const liveN=Object.keys(getLivePricing()).length;
   const dbLine=$('#db-line');
   if(dbLine){
-    const baseTxt='Source: '+(DATA.db_path||'')+(DATA.generated_at? ' • updated '+DATA.generated_at : '');
-    dbLine.textContent= baseTxt + (Object.keys(PRICING).length? ' • '+Object.keys(PRICING).length+' model(s) with custom pricing':'') + (liveN? ' • '+liveN+' (live)':'');
+    const baseTxt=tf('meta_src',{p:(DATA.db_path||'')})+(DATA.generated_at? ' '+tf('meta_updated',{d:DATA.generated_at}) : '');
+    dbLine.textContent= baseTxt + (Object.keys(PRICING).length? ' '+tf('meta_pricing',{n:Object.keys(PRICING).length}):'') + (liveN? ' '+tf('meta_live',{n:liveN}):'');
   }
 }
 
@@ -920,12 +1241,13 @@ function bindEvents(){
   const bex=$('#b-export'); if(bex) bex.addEventListener('click', exportBudgets);
   const bclr=$('#b-clear-draft'); if(bclr) bclr.addEventListener('click', clearBudgetsDraft);
   const th=$('#theme-toggle'); if(th) th.addEventListener('click', toggleTheme);
+  const lg=$('#lang-toggle'); if(lg) lg.addEventListener('click', ()=> setLang(LANG==='fr'?'en':'fr'));
   const printBtn=$('#print-btn'); if(printBtn) printBtn.addEventListener('click', ()=> window.print());
   const share=$('#share-link'); if(share) share.addEventListener('click', ()=>{
     pushURL();
     const url=location.href;
-    if(navigator.clipboard) navigator.clipboard.writeText(url).then(()=>{ share.textContent='✓ Copied'; setTimeout(()=>share.textContent='🔗 Share',1500); }).catch(()=>{ prompt('Link to copy:', url); });
-    else prompt('Link to copy:', url);
+    if(navigator.clipboard) navigator.clipboard.writeText(url).then(()=>{ share.textContent=t('share_copied'); setTimeout(()=>applyI18n(),1500); }).catch(()=>{ prompt(t('share_prompt'), url); });
+    else prompt(t('share_prompt'), url);
   });
   // tabs
   document.querySelectorAll('.tab-btn').forEach(b=>{
@@ -935,7 +1257,7 @@ function bindEvents(){
   const ft=$('#filters-toggle'), fp=$('#filters-panel');
   if(ft && fp) ft.addEventListener('click', ()=>{
     const collapsed=fp.classList.toggle('collapsed');
-    ft.textContent=collapsed? '＋ Filters' : '－ Filters';
+    ft.textContent=collapsed? t('filters_show') : t('filters_hide');
     ft.setAttribute('aria-expanded', collapsed? 'false':'true');
   });
   // session detail drawer
@@ -1042,12 +1364,12 @@ function buildPricingRows(){
     const p=liveStored[m] || PRICING[m]||{};
     const v=k=>p[k]!=null?p[k]:'';
     return '<div class="prow"><div class="mid" data-m="'+m+'">'+m+'</div>'+
-      '<div><label>input</label><input type="number" step="0.001" min="0" class="p-in" value="'+v('input_per_1M')+'"></div>'+
-      '<div><label>output</label><input type="number" step="0.001" min="0" class="p-out" value="'+v('output_per_1M')+'"></div>'+
-      '<div><label>cache read</label><input type="number" step="0.001" min="0" class="p-cr" value="'+v('cache_read_per_1M')+'"></div>'+
-      '<div><label>cache write</label><input type="number" step="0.001" min="0" class="p-cw" value="'+v('cache_write_per_1M')+'"></div>'+
-      '<div><label>reasoning</label><input type="number" step="0.001" min="0" class="p-re" value="'+v('reasoning_per_1M')+'"></div>'+
-      '<div><button class="fbtn" data-clear="'+m+'">Clear</button></div></div>';
+      '<div><label>'+t('pe_input')+'</label><input type="number" step="0.001" min="0" class="p-in" value="'+v('input_per_1M')+'"></div>'+
+      '<div><label>'+t('pe_output')+'</label><input type="number" step="0.001" min="0" class="p-out" value="'+v('output_per_1M')+'"></div>'+
+      '<div><label>'+t('pe_cr')+'</label><input type="number" step="0.001" min="0" class="p-cr" value="'+v('cache_read_per_1M')+'"></div>'+
+      '<div><label>'+t('pe_cw')+'</label><input type="number" step="0.001" min="0" class="p-cw" value="'+v('cache_write_per_1M')+'"></div>'+
+      '<div><label>'+t('pe_re')+'</label><input type="number" step="0.001" min="0" class="p-re" value="'+v('reasoning_per_1M')+'"></div>'+
+      '<div><button class="fbtn" data-clear="'+m+'">'+t('pe_clear')+'</button></div></div>';
   }).join('');
   const saveDraft=()=>{
     const d=getLivePricing();
@@ -1080,12 +1402,12 @@ function exportPricing(){
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='pricing.json'; document.body.appendChild(a); a.click(); setTimeout(()=>document.body.removeChild(a),500);
   try{ localStorage.setItem('pricing_draft', JSON.stringify({models:out})); }catch(e){}
-  $('#p-status').textContent='pricing.json exported ('+Object.keys(out).length+' model(s)) - replace config/pricing.json then: python extract.py --full && python build_report.py';
+  $('#p-status').textContent=tf('p_exported',{n:Object.keys(out).length});
 }
 function clearDraft(){
   try{ localStorage.removeItem('pricing_draft'); }catch(e){}
   buildPricingRows(); render();
-  $('#p-status').textContent='Draft cleared.';
+  $('#p-status').textContent=t('p_cleared');
 }
 function getLiveBudgets(){
   const out={global:{}, by_project:{}, by_model:{}};
@@ -1111,14 +1433,14 @@ function buildBudgetsEditRows(){
   const models=[...new Set(SESSIONS.map(s=>s.model_label||'?'))].sort();
   const projects=[...new Set(SESSIONS.map(s=>s.project_name||'?'))].sort();
   const gVal = budgets.global?.monthly ?? '';
-  let html='<div class="prow" style="grid-template-columns:1.6fr 1fr .5fr"><div class="mid">Global</div><div><label>monthly $</label><input type="number" step="0.01" min="0" id="budget-global" value="'+gVal+'"></div><div><button class="fbtn" onclick="document.getElementById(\'budget-global\').value=\'\'; saveBudgetsDraft(); debouncedLiveRender();">Clear</button></div></div>';
+  let html='<div class="prow" style="grid-template-columns:1.6fr 1fr .5fr"><div class="mid">'+t('be_global')+'</div><div><label>'+t('be_monthly')+'</label><input type="number" step="0.01" min="0" id="budget-global" value="'+gVal+'"></div><div><button class="fbtn" onclick="document.getElementById(\'budget-global\').value=\'\'; saveBudgetsDraft(); debouncedLiveRender();">'+t('pe_clear')+'</button></div></div>';
   html+=models.map(m=>{
     const v=budgets.by_model?.[m]?.monthly ?? '';
-    return '<div class="prow brow" data-kind="model" data-key="'+escapeHtml(m)+'" style="grid-template-columns:1.6fr 1fr .5fr"><div class="mid">'+escapeHtml(m)+'</div><div><label>monthly $</label><input type="number" step="0.01" min="0" value="'+v+'"></div><div><button class="fbtn" data-bclear>Clear</button></div></div>';
+    return '<div class="prow brow" data-kind="model" data-key="'+escapeHtml(m)+'" style="grid-template-columns:1.6fr 1fr .5fr"><div class="mid">'+escapeHtml(m)+'</div><div><label>'+t('be_monthly')+'</label><input type="number" step="0.01" min="0" value="'+v+'"></div><div><button class="fbtn" data-bclear>'+t('pe_clear')+'</button></div></div>';
   }).join('');
   html+=projects.map(p=>{
     const v=budgets.by_project?.[p]?.monthly ?? '';
-    return '<div class="prow brow" data-kind="project" data-key="'+escapeHtml(p)+'" style="grid-template-columns:1.6fr 1fr .5fr"><div class="mid">'+escapeHtml(p)+' (project)</div><div><label>monthly $</label><input type="number" step="0.01" min="0" value="'+v+'"></div><div><button class="fbtn" data-bclear>Clear</button></div></div>';
+    return '<div class="prow brow" data-kind="project" data-key="'+escapeHtml(p)+'" style="grid-template-columns:1.6fr 1fr .5fr"><div class="mid">'+escapeHtml(tf('be_project',{p:p}))+'</div><div><label>'+t('be_monthly')+'</label><input type="number" step="0.01" min="0" value="'+v+'"></div><div><button class="fbtn" data-bclear>'+t('pe_clear')+'</button></div></div>';
   }).join('');
   const cont=document.getElementById('budgets-edit-rows');
   if(!cont) return;
@@ -1147,22 +1469,23 @@ function exportBudgets(){
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='budgets.json'; document.body.appendChild(a); a.click(); setTimeout(()=>{ document.body.removeChild(a), URL.revokeObjectURL(url); },500);
   try{ localStorage.setItem('budgets_draft', JSON.stringify(out)); }catch(e){}
-  const st=document.getElementById('b-status'); if(st) st.textContent='budgets.json exported ('+Object.keys(out.by_model||{}).length+' models, '+Object.keys(out.by_project||{}).length+' projects)';
+  const st=document.getElementById('b-status'); if(st) st.textContent=tf('b_exported',{n:Object.keys(out.by_model||{}).length, m:Object.keys(out.by_project||{}).length});
 }
 function clearBudgetsDraft(){
   try{ localStorage.removeItem('budgets_draft'); }catch(e){}
   buildBudgetsEditRows(); render();
-  const st=document.getElementById('b-status'); if(st) st.textContent='Budgets draft cleared.';
+  const st=document.getElementById('b-status'); if(st) st.textContent=t('b_cleared');
 }
 function initMeta(){
   const t=DATA.totals||{};
-  $('#meta-sub').textContent='Generated '+(DATA.generated_at||'').replace('T',' ').replace('Z',' UTC')+' (UTC) • '+fmtInt(t.sessions)+' sessions';
-  $('#db-line').textContent='Source: '+(DATA.db_path||'');
+  $('#meta-sub').textContent=tf('meta_gen',{d:(DATA.generated_at||'').replace('T',' ').replace('Z',' UTC'),n:fmtInt(t.sessions)});
+  $('#db-line').textContent=tf('meta_src',{p:(DATA.db_path||'')});
   const nOverride=Object.keys(PRICING).length;
-  if (nOverride) $('#db-line').textContent+=' • '+nOverride+' model(s) with custom pricing';
+  if (nOverride) $('#db-line').textContent+=' '+tf('meta_pricing',{n:nOverride});
 }
 
 function initApp(){
+  applyI18n();
   initFilters();
   buildPricingRows();
   buildBudgetsEditRows();

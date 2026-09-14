@@ -11,9 +11,19 @@ Navigation uses header buttons (`role="tablist"`).
 The active view persists in the URL (`?view=...`) and is therefore shareable
 via "🔗 Share". Without a parameter, the overview shows.
 
+## Language (EN/FR)
+
+The header `FR`/`EN` button (`#lang-toggle`) switches the whole UI between
+English and French. Choice persists in `localStorage` (`agentledger_lang`),
+can be forced via `?lang=fr|en`, and is included in shared links. Default:
+URL param, then saved choice, then browser language. Implementation:
+`I18N` dict + `t(k)` / `tf(k, params)` in the template; static text uses
+`data-i18n` (plus `-html`/`-ph`/`-title`/`-aria` variants). `tests/test_i18n.py`
+fails the build if a used key is missing in either language.
+
 | Tab (`view=`) | Contents |
 |---|---|
-| `overview` (default) | KPIs, cost/tokens per day charts, cost/session histogram, cache & errors, 30-day forecast, budgets grid, anomalies |
+| `overview` (default) | KPIs, trio row (anomalies + cost/session histogram + cache & errors sharing 100%), cost/tokens per day charts, 30-day forecast, budgets grid |
 | `modeles` | Cost-by-model donut, multi-model comparison card, cost customization panel (`pricing.json`) |
 | `projets` | Cost by agent, cost by team, budgets editing panel (`budgets.json`) |
 | `sessions` | Natural-language search (NLQ) + full-width detail table with CSV/JSON exports |

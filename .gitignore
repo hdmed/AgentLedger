@@ -12,3 +12,4 @@ OpenCost.spec
 AgentLedger.spec
 __pycache__/
 *.pyc
+.opencode/
