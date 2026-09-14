@@ -29,6 +29,13 @@ class TestResources(unittest.TestCase):
                 self.assertEqual(resources.app_root(), root)
                 self.assertEqual(resources.resource_path("templates", "report_template.html"), os.path.join(root, "templates", "report_template.html"))
 
+    def test_basename_crossplatform(self):
+        self.assertEqual(resources.basename_crossplatform("C:\\Users\\DII\\proj"), "proj")
+        self.assertEqual(resources.basename_crossplatform("/tmp/kilo"), "kilo")
+        self.assertEqual(resources.basename_crossplatform("prox/"), "prox")
+        self.assertEqual(resources.basename_crossplatform(None), "")
+        self.assertEqual(resources.basename_crossplatform("D:\\CD\\Models\\AI-Directory"), "AI-Directory")
+
 
 if __name__ == "__main__":
     unittest.main()

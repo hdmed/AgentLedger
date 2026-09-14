@@ -243,7 +243,7 @@ def fetch_sessions(db_path: str, watermark: int, full: bool) -> list[dict[str, A
             d["time_updated"] = to_seconds(d.get("time_updated"))
             proj = projects.get(d.get("project_id"))
             if proj:
-                d["project_name"] = proj.get("name") or os.path.basename(proj.get("worktree") or "") or d.get("project_id")
+                d["project_name"] = proj.get("name") or resources.basename_crossplatform(proj.get("worktree")) or d.get("project_id")
             else:
                 d["project_name"] = d.get("project_id")
             sessions.append(d)

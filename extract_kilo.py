@@ -241,7 +241,7 @@ def _project_name(conn: sqlite3.Connection, project_id: Any, columns: list[str] 
     if not row:
         return str(project_id)
     name, worktree = row[0], row[1]
-    return str(name or (os.path.basename(str(worktree or "")) if worktree else "") or project_id)
+    return str(name or (resources.basename_crossplatform(worktree) if worktree else "") or project_id)
 
 
 def fetch_sessions(db_path: str, watermark: int = 0, full: bool = False) -> list[dict[str, Any]]:

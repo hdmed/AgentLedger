@@ -120,8 +120,7 @@ def _credits(raw: Any) -> float:
 
 def _project_name(cwd: Any, project_id: Any) -> str:
     if cwd:
-        base = os.path.basename(str(cwd).rstrip("/\\")) or str(cwd)
-        return base
+        return resources.basename_crossplatform(cwd)
     return str(project_id or "?")
 
 

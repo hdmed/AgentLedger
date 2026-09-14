@@ -7,6 +7,19 @@ import sys
 APP_NAME = "OpenCost"
 
 
+def basename_crossplatform(path: str | None) -> str:
+    """Dernier segment d'un chemin Windows ou posix, sur n'importe quel OS.
+
+    `os.path.basename` seul échoue sur les chemins Windows (`C:\\...`)
+    quand les tests tournent sous Linux (CI) et inversement.
+    """
+    import re
+
+    text = str(path or "").strip()
+    parts = [p for p in re.split(r"[\\/]+", text) if p]
+    return parts[-1] if parts else text
+
+
 def is_frozen() -> bool:
     return getattr(sys, "frozen", False)
 

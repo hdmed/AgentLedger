@@ -108,6 +108,21 @@ class TestHelpers(unittest.TestCase):
             finally:
                 conn.close()
 
+    def test_project_name_windows_worktree(self):
+        with tempfile.TemporaryDirectory() as d:
+            db = os.path.join(d, "k.db")
+            conn = sqlite3.connect(db)
+            conn.execute("CREATE TABLE session (id TEXT PRIMARY KEY, time_created INT)")
+            conn.execute("CREATE TABLE project (id TEXT PRIMARY KEY, name TEXT, worktree TEXT)")
+            conn.execute("INSERT INTO project VALUES ('p1', NULL, 'D:\\Projets\\demo')")
+            conn.commit()
+            conn2 = connect(db)
+            try:
+                self.assertEqual(_project_name(conn2, "p1", ["id", "name"]), "demo")
+            finally:
+                conn2.close()
+            conn.close()
+
     def test_default_db_path_env(self):
         with patch.dict(os.environ, {"KILO_DB": "/tmp/custom.db"}):
             self.assertTrue(default_db_path().endswith("custom.db"))
