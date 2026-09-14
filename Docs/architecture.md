@@ -44,8 +44,9 @@ Recent databases store **milliseconds** — normalized to seconds by
 ### AutoClaw / OpenClaw
 
 Reads existing `telemetry/journal.js` (aggregated per session) with a
-`latest.js` snapshot fallback, never launching or modifying `collect.ps1`.
-Details and field mapping: [AutoClaw / OpenClaw connector](AutCLW.md).
+`latest.js` snapshot fallback, strictly read-only — AgentLedger never
+runs a collector itself. Details and field mapping:
+[AutoClaw / OpenClaw connector](AutCLW.md).
 
 ### Kilo / KiloCode
 
@@ -68,8 +69,8 @@ must not know each source's SQL details.
 - Versioned configuration: `config/pricing.json`, `config/budgets.json`.
 - State and dataset: local data folder, currently `data/`.
 - Report: `dist/report.html`.
-- AutoClaw input telemetry: `Docs/AutCLW/TDB/openclaw-tdb/telemetry/`
-  (plus frozen-mode candidates — see `AutCLW.md`).
+- AutoClaw input telemetry: canonical `%LOCALAPPDATA%\AgentLedger\telemetry`
+  (plus `AUTOCLAW_TELEMETRY_DIR` / frozen-mode candidates — see `AutCLW.md`).
 - For the EXE, resources come from the PyInstaller bundle and data, state,
   reports and user configuration live under `%LOCALAPPDATA%\AgentLedger`
   (or `AGENTLEDGER_USER_DIR`; legacy `OPENCOST_USER_DIR` still honored).

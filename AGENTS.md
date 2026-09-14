@@ -23,7 +23,7 @@
 - `make open-app` — run the source-tree launcher.
 - `make exe` — build the one-file Windows executable.
 - `make exe-debug` — build the one-folder executable for diagnosis.
-- `make clean` — remove generated dataset, sync state, and report.
+- `make clean` — remove generated dataset, all sync states, and report.
 - Focused tests: `python -m unittest tests/test_extract.py`, `tests/test_build.py`, `tests/test_resources.py`, `tests/test_launcher.py`, `tests/test_kilo.py`, `tests/test_autoclaw.py`, `tests/test_workbuddy.py`, or `tests/test_integration.py`.
 
 ## Data and configuration
@@ -36,4 +36,6 @@
 ## Verification
 - CI uses Python 3.11 (Linux + Windows): `py_compile`, all `unittest` tests, then `python build_report.py --strict` (creating a dummy dataset only when the ignored dataset is absent); Windows CI additionally builds the EXE and smoke-tests `--version`/`--diagnose`.
 - Use `--strict` when verifying that the vendored Chart.js asset is present.
-- Validate template JS changes with `node --check` on the extracted script.
+- Validate template JS changes with `make check-js` (`node --check` on the
+  extracted script with the `/*__DATASET__*/` placeholder substituted —
+  a raw check fails on the placeholder by design).

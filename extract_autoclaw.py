@@ -22,22 +22,35 @@ class AutoclawSchemaError(RuntimeError):
     pass
 
 
+def canonical_dir() -> str:
+    """Canonical per-user telemetry folder (first choice when it exists).
+
+    Copy `journal.js` / `latest.js` (as produced by the TDB collector)
+    into this folder, or point `AUTOCLAW_TELEMETRY_DIR` / `--autoclaw-dir`
+    at your own location.
+    """
+    return os.path.join(resources.user_root(), "telemetry")
+
+
+def legacy_dir() -> str:
+    """Historical vendored location (kept as a last-resort fallback)."""
+    return resources.resource_path(
+        "Docs", "AutCLW", "TDB", "openclaw-tdb", "telemetry"
+    )
+
+
 def candidate_dirs() -> list[str]:
     """telemetry/ locations searched in order (first existing one wins)."""
     candidates: list[str] = []
     override = os.environ.get("AUTOCLAW_TELEMETRY_DIR")
     if override:
         candidates.append(os.path.abspath(os.path.expanduser(override)))
+    candidates.append(canonical_dir())
     if resources.is_frozen():
         import sys as _sys
         exe_dir = os.path.dirname(os.path.abspath(_sys.executable))
         candidates.append(os.path.join(exe_dir, "telemetry"))
-        candidates.append(os.path.join(resources.user_root(), "telemetry"))
-        candidates.append(os.path.join(exe_dir, "..", "Docs", "AutCLW", "TDB",
-                                       "openclaw-tdb", "telemetry"))
-    candidates.append(resources.resource_path(
-        "Docs", "AutCLW", "TDB", "openclaw-tdb", "telemetry"
-    ))
+    candidates.append(legacy_dir())
     seen: list[str] = []
     for path in candidates:
         norm = os.path.normpath(path)
@@ -53,7 +66,7 @@ def default_dir() -> str:
     for path in candidate_dirs():
         if os.path.isdir(path):
             return path
-    return candidate_dirs()[-1]
+    return canonical_dir()
 
 
 def _parse_ts(value: Any) -> int | None:
