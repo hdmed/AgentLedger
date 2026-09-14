@@ -6,6 +6,8 @@ import sys
 
 APP_NAME = "AgentLedger"
 
+__version__ = "1.0.0"
+
 # Legacy env names from the OpenCost era, still honored as fallback.
 LEGACY_APP_NAME = "OpenCost"
 
