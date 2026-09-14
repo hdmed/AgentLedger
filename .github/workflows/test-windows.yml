@@ -20,7 +20,7 @@ jobs:
       - run: pip install pyinstaller
       - run: python build_exe.py --confirm
       - run: |
-          $env:OPENCOST_USER_DIR = "$env:TEMP\oc_ci_user"
-          .\dist\OpenCost.exe --version
-          .\dist\OpenCost.exe --diagnose
+          $env:AGENTLEDGER_USER_DIR = "$env:TEMP\oc_ci_user"
+          .\dist\AgentLedger.exe --version
+          .\dist\AgentLedger.exe --diagnose
         shell: powershell

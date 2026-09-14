@@ -1,97 +1,117 @@
-# AutoClaw / OpenClaw — connecteur cible
+# AutoClaw / OpenClaw connector
 
-## Emplacement et statut
+## Location and status
 
-Le projet AutoClaw est déjà présent dans [`Docs/AutCLW/`](AutCLW/). Son tableau de bord autonome se trouve dans [`Docs/AutCLW/TDB/`](AutCLW/TDB/) et collecte les métriques OpenClaw sans modifier les bases ou transcripts sources.
+The AutoClaw project is vendored under [`Docs/AutCLW/`](AutCLW/). Its
+standalone dashboard lives in [`Docs/AutCLW/TDB/`](AutCLW/TDB/) and collects
+OpenClaw metrics without modifying source databases or transcripts.
 
-OpenCost peut réutiliser ce projet comme deuxième source locale. Le connecteur AutoClaw est intégré via `extract_autoclaw.py` : lecture read-only de `telemetry/journal.js` (agrégé par session) avec repli sur les sessions de `telemetry/latest.js` quand le journal est absent ou vide, sans lancer ni modifier `collect.ps1`. Fusion additive dans le dataset via `(source, source_session_id)` avec `source="autoclaw"`.
+AgentLedger reuses this project as a local source. The connector is
+implemented in `extract_autoclaw.py`: read-only reads of
+`telemetry/journal.js` (aggregated per session) with a `telemetry/latest.js`
+fallback when the journal is missing or empty — never launching or modifying
+`collect.ps1`. Additive merge into the dataset via
+`(source, source_session_id)` with `source="autoclaw"`.
 
-Décisions tranchées à l'implémentation :
+Decisions made during implementation:
 
-- `source` = `autoclaw` ; `source_session_id` = `journal:<session>` (primaire) ou `snapshot:<key>` (repli, jamais combiné au journal pour éviter tout double comptage).
-- `project` = `agent` AutoClaw (aucun espace de travail dans le journal) ; `agent` = `journal.agent`.
-- `model` = `provider/model` (`provider` du journal si le modèle n'est pas qualifié) ; `time_created`/`time_updated` = min/max des `ts` en UTC.
-- `tokens_input`/`tokens_output`/`tokens_cache_read` cumulés ; `tokens` non ventilé compté en entrée (fallback contrôlé) ; coût journalier nul avec `cost_source` résolu à la fusion (`pricing` si override, sinon `autoclaw`).
-- État séparé `data/autoclaw_sync_state.json`, watermark indépendant, options `--autoclaw-dir`, `--autoclaw-full`, `--autoclaw-since`, `--no-autoclaw` (env `AUTOCLAW_TELEMETRY_DIR`).
-- En mode EXE (frozen), le dossier est détecté automatiquement dans l'ordre : `AUTOCLAW_TELEMETRY_DIR`, `telemetry/` à côté de l'EXE, `%LOCALAPPDATA%\OpenCost\telemetry`, `..\Docs\AutCLW\TDB\openclaw-tdb\telemetry` (layout `dist/`), télémétrie embarquée. `launcher --diagnose` liste les candidats et leur existence (`autoclaw_candidat`).
+- `source` = `autoclaw`; `source_session_id` = `journal:<session>` (primary)
+  or `snapshot:<key>` (fallback, never combined with the journal to avoid
+  double counting).
+- `project` = AutoClaw `agent` (no workspace in the journal);
+  `agent` = `journal.agent`.
+- `model` = `provider/model` (`provider` from the journal when the model is
+  unqualified); `time_created`/`time_updated` = min/max of `ts` in UTC.
+- `tokens_input`/`tokens_output`/`tokens_cache_read` summed; unventilated
+  `tokens` counted as input (controlled fallback); zero journal cost with
+  `cost_source` resolved at merge time (`pricing` on override, else
+  `autoclaw`).
+- Separate state `data/autoclaw_sync_state.json`, independent watermark,
+  `--autoclaw-dir`, `--autoclaw-full`, `--autoclaw-since`, `--no-autoclaw`
+  options (`AUTOCLAW_TELEMETRY_DIR` env).
+- In frozen EXE mode the folder is auto-detected in order:
+  `AUTOCLAW_TELEMETRY_DIR`, `telemetry/` next to the EXE,
+  `%LOCALAPPDATA%\AgentLedger\telemetry`,
+  `..\Docs\AutCLW\TDB\openclaw-tdb\telemetry` (`dist/` layout), bundled
+  telemetry. `launcher --diagnose` lists candidates and their status
+  (`autoclaw_candidat`).
 
-## Sources lues
+## Sources read
 
-Le collecteur existant [`Docs/AutCLW/TDB/openclaw-tdb/collect.ps1`](AutCLW/TDB/openclaw-tdb/collect.ps1) utilise :
+The existing collector
+[`Docs/AutCLW/TDB/openclaw-tdb/collect.ps1`](AutCLW/TDB/openclaw-tdb/collect.ps1)
+uses:
 
-- la CLI OpenClaw, par défaut `C:\Program Files\AutoClaw\resources\gateway\openclaw\openclaw.mjs` ou `~\.openclaw\openclaw.mjs` ;
-- la commande `status --json` pour le snapshot du gateway ;
-- les transcripts `~\.openclaw-autoclaw\agents\*\sessions\*.jsonl` pour le journal des actions ;
-- les fichiers de sortie `openclaw-tdb\telemetry\` pour le tableau de bord.
+- the OpenClaw CLI, by default `C:\Program Files\AutoClaw\resources\gateway\openclaw\openclaw.mjs`
+  or `~\.openclaw\openclaw.mjs`;
+- `status --json` for the gateway snapshot;
+- transcripts `~\.openclaw-autoclaw\agents\*\sessions\*.jsonl` for the action journal;
+- output files in `openclaw-tdb\telemetry\` for the dashboard.
 
-La collecte est read-only pour OpenClaw. Les écritures sont limitées au dossier de télémétrie AutoClaw.
+Collection is read-only for OpenClaw. Writes are limited to the AutoClaw
+telemetry folder.
 
-## Contrat de données observé
+## Observed data contract
 
 ### Snapshot
 
-`telemetry\latest.js` expose `window.TDB_REMOTE` avec notamment :
+`telemetry\latest.js` exposes `window.TDB_REMOTE` with:
 
-- `ts`, `model`, `provider`, `runtimeVersion` ;
-- `runIn`, `runOut`, `totalTokens`, `costUsd` ;
-- `cacheHitPct`, `cachedTokens`, `contextTokens`, `contextLimit` ;
-- `sessionsActive`, `sessionsTotal`, `agentsTotal`, `cronsTotal`, `channels` ;
-- `sessions[]` avec `key`, `channel`, `model`, `tokens`, `cost`, `status` ;
-- `agents[]` avec `id`, `name`, `model`, `active`.
+- `ts`, `model`, `provider`, `runtimeVersion`;
+- `runIn`, `runOut`, `totalTokens`, `costUsd`;
+- `cacheHitPct`, `cachedTokens`, `contextTokens`, `contextLimit`;
+- `sessionsActive`, `sessionsTotal`, `agentsTotal`, `cronsTotal`, `channels`;
+- `sessions[]` with `key`, `channel`, `model`, `tokens`, `cost`, `status`;
+- `agents[]` with `id`, `name`, `model`, `active`.
 
-`telemetry\history.jsonl` conserve les snapshots dans le temps. `costUsd` et `sessions[].cost` sont actuellement optionnels et souvent `null`.
+`telemetry\history.jsonl` keeps snapshots over time. `costUsd` and
+`sessions[].cost` are currently optional and often `null`.
 
-### Journal des actions
+### Action journal
 
-`telemetry\journal.js` expose `window.TDB_JOURNAL` avec :
+`telemetry\journal.js` exposes `window.TDB_JOURNAL` with:
 
-- `ts`, `agent`, `session`, `task`, `action` ;
-- `provider`, `model`, `durationMs` ;
-- `tokens`, `inputTokens`, `outputTokens`, `cacheReadTokens` ;
-- `tokenStatus` (`reported`, `estimated` ou `unknown`) ;
+- `ts`, `agent`, `session`, `task`, `action`;
+- `provider`, `model`, `durationMs`;
+- `tokens`, `inputTokens`, `outputTokens`, `cacheReadTokens`;
+- `tokenStatus` (`reported`, `estimated` or `unknown`);
 - `state`.
 
-`telemetry\stats-aggregates.json` conserve les totaux cumulés, la répartition par modèle et les compteurs d'événements. Ces agrégats ne doivent pas être confondus avec les sessions détaillées utilisées par OpenCost.
+`telemetry\stats-aggregates.json` keeps cumulative totals, per-model split
+and event counters. These aggregates must not be confused with the detailed
+sessions AgentLedger uses.
 
-## Mapping vers le modèle commun OpenCost
+## Mapping onto the common model
 
-| Modèle commun | Champ AutoClaw candidat | Remarque |
+| Common model | AutoClaw candidate | Note |
 |---|---|---|
-| `source` | nom du connecteur AutoClaw | Valeur de provenance à confirmer lors de l'implémentation |
-| `source_session_id` | `sessions[].key` ou `journal.session` | La stabilité entre snapshots doit être vérifiée |
-| `project` | `agent` ou espace de travail AutoClaw | À confirmer selon l'usage attendu |
-| `agent` | `journal.agent` | Identifiant d'agent AutoClaw |
-| `model_provider` | partie avant `/` de `model` | Optionnel si le modèle n'est pas qualifié |
-| `model_id` | partie après `/` de `model` | Conserver la valeur brute en provenance |
-| `time_created` / `time_updated` | `ts` | Normaliser en UTC |
-| `tokens_input` / `tokens_output` | `inputTokens` / `outputTokens` | Utiliser `tokens` comme fallback contrôlé |
-| `tokens_cache_read` | `cacheReadTokens` | Optionnel |
-| `cost` | `costUsd` ou `sessions[].cost` | Requiert une règle de prix si la source est nulle |
-| `cost_source` | `source` ou `pricing` | Conserver la provenance du calcul |
+| `source` | connector name | `autoclaw` |
+| `source_session_id` | `sessions[].key` or `journal.session` | prefixed `journal:` / `snapshot:` |
+| `project` | AutoClaw `agent` | no workspace in the journal |
+| `agent` | `journal.agent` | AutoClaw agent id |
+| `model_provider` | part before `/` of `model` | optional when unqualified |
+| `model_id` | part after `/` of `model` | raw value kept |
+| `time_created` / `time_updated` | `ts` | UTC normalized |
+| `tokens_input` / `tokens_output` | `inputTokens` / `outputTokens` | `tokens` as controlled fallback |
+| `tokens_cache_read` | `cacheReadTokens` | optional |
+| `cost` | `costUsd` or `sessions[].cost` | pricing rule when source is null |
+| `cost_source` | `source` or `pricing` | computation provenance kept |
 
-Les champs absents doivent rester optionnels. Une session ou action sans coût ne doit pas bloquer l'import des autres sources.
+Missing fields stay optional. A costless session or action must not block
+other sources' imports.
 
-## Stratégie d'intégration recommandée
+## Acceptance criteria
 
-1. ~~Ajouter un connecteur AutoClaw qui lit les fichiers de télémétrie existants sans lancer ni modifier `collect.ps1`.~~ Fait (`extract_autoclaw.py`).
-2. ~~Produire des fixtures à partir de `sample-data/` et de snapshots anonymisés.~~ Fait (`tests/test_autoclaw.py`, dont un test sur les fixtures versionnées).
-3. ~~Implémenter la déduplication par source et identifiant stable.~~ Fait (clé `(source, source_session_id)`, watermark indépendant).
-4. ~~Fusionner les sessions AutoClaw avec le dataset OpenCost existant.~~ Fait (`launcher.merge_source_result`, filtre `Source` dans le rapport).
-5. ~~Ajouter le filtre par source dans le rapport, puis emballer le résultat dans l'EXE.~~ Filtre fait ; EXE via l'import du lanceur (PyInstaller suit `extract_autoclaw`).
+- Missing OpenClaw, empty transcripts or partial schema: explicit diagnosis,
+  other sources' imports preserved.
+- Two collections of the same session create no duplicate.
+- No writes to `C:\Program Files\AutoClaw`, `~\.openclaw` or
+  `~\.openclaw-autoclaw`.
+- The AgentLedger report stays fully offline after merging.
+- Optional fields and zero costs display without breaking the build.
 
-Le tableau de bord AutoClaw existant peut rester autonome pendant cette phase. Il constitue déjà une référence fonctionnelle pour les KPI, le journal et les modes de rafraîchissement.
+## Existing AutoClaw documentation
 
-## Critères d'acceptation
-
-- OpenClaw absent, transcripts vides ou schéma partiel : diagnostic explicite et import des autres sources préservé.
-- Deux collectes d'une même session ne créent pas de doublon.
-- Aucune écriture dans `C:\Program Files\AutoClaw`, `~\.openclaw` ou `~\.openclaw-autoclaw`.
-- Le rapport OpenCost reste entièrement hors-ligne après fusion.
-- Les champs optionnels et les coûts nuls sont visibles sans faire échouer le build.
-
-## Documentation AutoClaw existante
-
-- [Présentation du projet](AutCLW/README.md)
-- [Installation du TDB](AutCLW/TDB/docs/INSTALL.md)
-- [Usage du TDB](AutCLW/TDB/docs/USAGE.md)
-- [Architecture du TDB](AutCLW/TDB/docs/ARCHITECTURE.md)
+- [Project overview](AutCLW/README.md)
+- [TDB installation](AutCLW/TDB/docs/INSTALL.md)
+- [TDB usage](AutCLW/TDB/docs/USAGE.md)

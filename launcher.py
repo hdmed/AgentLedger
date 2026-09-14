@@ -15,33 +15,33 @@ import extract_workbuddy
 import resources
 
 VERSION = "1.0.0"
-logger = logging.getLogger("opencost")
+logger = logging.getLogger("agentledger")
 
 
 def parse_args(argv=None):
-    parser = argparse.ArgumentParser(description="Tableau de bord OpenCost autonome")
-    parser.add_argument("--db", help="chemin vers opencode.db")
-    parser.add_argument("--full", action="store_true", help="reconstruire le dataset complet")
-    parser.add_argument("--since", help="extraire depuis une date AAAA-MM-JJ")
-    parser.add_argument("--watch", action="store_true", help="surveiller la base après le premier rapport")
-    parser.add_argument("--reset", action="store_true", help="supprimer dataset, état et rapport avant extraction")
-    parser.add_argument("--open-only", action="store_true", help="ouvrir le rapport existant sans extraction")
-    parser.add_argument("--no-open", action="store_true", help="ne pas ouvrir le navigateur")
-    parser.add_argument("--no-strict", action="store_true", help="tolérer un asset Chart.js manquant")
-    parser.add_argument("--diagnose", action="store_true", help="afficher les chemins et l'état des ressources")
-    parser.add_argument("--version", action="store_true", help="afficher la version")
-    parser.add_argument("--kilo-db", default=None, help="chemin vers kilo.db (défaut: détection auto)")
-    parser.add_argument("--kilo-full", action="store_true", help="re-extraction complète Kilo")
-    parser.add_argument("--kilo-since", default=None, help="extraire Kilo depuis une date AAAA-MM-JJ")
-    parser.add_argument("--no-kilo", action="store_true", help="désactiver le connecteur Kilo")
-    parser.add_argument("--autoclaw-dir", default=None, help="dossier telemetry/ AutoClaw (défaut: Docs/AutCLW/...)")
-    parser.add_argument("--autoclaw-full", action="store_true", help="re-extraction complète AutoClaw")
-    parser.add_argument("--autoclaw-since", default=None, help="extraire AutoClaw depuis une date AAAA-MM-JJ")
-    parser.add_argument("--no-autoclaw", action="store_true", help="désactiver le connecteur AutoClaw")
-    parser.add_argument("--workbuddy-db", default=None, help="chemin vers workbuddy.db (défaut: détection auto)")
-    parser.add_argument("--workbuddy-full", action="store_true", help="re-extraction complète WorkBuddy")
-    parser.add_argument("--workbuddy-since", default=None, help="extraire WorkBuddy depuis une date AAAA-MM-JJ")
-    parser.add_argument("--no-workbuddy", action="store_true", help="désactiver le connecteur WorkBuddy")
+    parser = argparse.ArgumentParser(description="Standalone AgentLedger dashboard")
+    parser.add_argument("--db", help="path to opencode.db")
+    parser.add_argument("--full", action="store_true", help="rebuild the full dataset")
+    parser.add_argument("--since", help="extract from a YYYY-MM-DD date")
+    parser.add_argument("--watch", action="store_true", help="watch the database after the first report")
+    parser.add_argument("--reset", action="store_true", help="delete dataset, state and report before extracting")
+    parser.add_argument("--open-only", action="store_true", help="open the existing report without extracting")
+    parser.add_argument("--no-open", action="store_true", help="do not open the browser")
+    parser.add_argument("--no-strict", action="store_true", help="tolerate a missing Chart.js asset")
+    parser.add_argument("--diagnose", action="store_true", help="print paths and resource status")
+    parser.add_argument("--version", action="store_true", help="print the version")
+    parser.add_argument("--kilo-db", default=None, help="path to kilo.db (default: auto-detect)")
+    parser.add_argument("--kilo-full", action="store_true", help="full Kilo re-extraction")
+    parser.add_argument("--kilo-since", default=None, help="extract Kilo from a YYYY-MM-DD date")
+    parser.add_argument("--no-kilo", action="store_true", help="disable the Kilo connector")
+    parser.add_argument("--autoclaw-dir", default=None, help="AutoClaw telemetry/ folder (default: Docs/AutCLW/...)")
+    parser.add_argument("--autoclaw-full", action="store_true", help="full AutoClaw re-extraction")
+    parser.add_argument("--autoclaw-since", default=None, help="extract AutoClaw from a YYYY-MM-DD date")
+    parser.add_argument("--no-autoclaw", action="store_true", help="disable the AutoClaw connector")
+    parser.add_argument("--workbuddy-db", default=None, help="path to workbuddy.db (default: auto-detect)")
+    parser.add_argument("--workbuddy-full", action="store_true", help="full WorkBuddy re-extraction")
+    parser.add_argument("--workbuddy-since", default=None, help="extract WorkBuddy from a YYYY-MM-DD date")
+    parser.add_argument("--no-workbuddy", action="store_true", help="disable the WorkBuddy connector")
     return parser.parse_args(argv)
 
 
@@ -64,16 +64,16 @@ def reset_user_data():
 
 
 def merge_kilo_result(dataset_path, pricing_path, kilo_result):
-    """Compatibilité ascendante : fusion d'une source via le chemin générique."""
+    """Backward compatibility: merge one source through the generic path."""
     return merge_source_result(dataset_path, pricing_path, kilo_result)
 
 
 def merge_source_result(dataset_path, pricing_path, source_result):
-    """Fusion additive des sessions d'une source dans le dataset partagé.
+    """Additively merge one source's sessions into the shared dataset.
 
-    Clé de dédup (source, source_session_id). L'absence ou l'échec
-    d'une source ne supprime jamais les sessions des autres sources.
-    Retourne (nb_source, total).
+    Dedup key is (source, source_session_id). A missing or failing
+    source never deletes other sources' sessions.
+    Returns (source_count, total).
     """
     import json
 
@@ -87,7 +87,7 @@ def merge_source_result(dataset_path, pricing_path, source_result):
     for s in sessions:
         s.setdefault("source", "opencode")
         s.setdefault("source_session_id", s.get("id"))
-        # guérison : labels écrasés en "unknown" par les anciennes fusions
+        # heal labels clobbered to "unknown" by older merges
         if s.get("source") != "opencode" and s.get("model_label") in (None, "unknown", "?/?"):
             mid = extract.parse_model(s.get("model"))
             if mid:
@@ -147,7 +147,7 @@ def merge_source_result(dataset_path, pricing_path, source_result):
 
 
 def run_kilo_sync(args, dataset_path, pricing_path):
-    """Exécute le connecteur Kilo et fusionne. Ne bloque jamais les autres sources."""
+    """Run the Kilo connector and merge. Never blocks other sources."""
     if getattr(args, "no_kilo", False):
         return None
     kilo_args = argparse.Namespace(
@@ -160,19 +160,19 @@ def run_kilo_sync(args, dataset_path, pricing_path):
     result = extract_kilo.extract(kilo_args, dataset_path, extract_kilo.KILO_STATE_PATH)
     status = result.get("status")
     if status == "missing":
-        logger.info("Kilo absent (%s) : dataset OpenCode conservé", result.get("db_path"))
+        logger.info("Kilo missing (%s): keeping the OpenCode dataset", result.get("db_path"))
         return result
     if status == "error":
-        logger.warning("Kilo indisponible (%s) : dataset OpenCode conservé",
+        logger.warning("Kilo unavailable (%s): keeping the OpenCode dataset",
                        result.get("error") or result.get("db_path"))
         return result
     n_kilo, n_total = merge_kilo_result(dataset_path, pricing_path, result)
-    logger.info("Kilo fusionné : %d session(s) kilo, %d au total", n_kilo, n_total)
+    logger.info("Kilo merged: %d kilo session(s), %d total", n_kilo, n_total)
     return result
 
 
 def run_autoclaw_sync(args, dataset_path, pricing_path):
-    """Exécute le connecteur AutoClaw et fusionne. Ne bloque jamais les autres sources."""
+    """Run the AutoClaw connector and merge. Never blocks other sources."""
     if getattr(args, "no_autoclaw", False):
         return None
     autoclaw_args = argparse.Namespace(
@@ -185,19 +185,19 @@ def run_autoclaw_sync(args, dataset_path, pricing_path):
     result = extract_autoclaw.extract(autoclaw_args, dataset_path, extract_autoclaw.AUTOCLAW_STATE_PATH)
     status = result.get("status")
     if status == "missing":
-        logger.info("AutoClaw absent (%s) : autres sources conservées", result.get("telemetry_dir"))
+        logger.info("AutoClaw missing (%s): keeping other sources", result.get("telemetry_dir"))
         return result
     if status == "error":
-        logger.warning("AutoClaw indisponible (%s) : autres sources conservées",
+        logger.warning("AutoClaw unavailable (%s): keeping other sources",
                        result.get("error") or result.get("telemetry_dir"))
         return result
     n_auto, n_total = merge_source_result(dataset_path, pricing_path, result)
-    logger.info("AutoClaw fusionné : %d session(s) autoclaw, %d au total", n_auto, n_total)
+    logger.info("AutoClaw merged: %d autoclaw session(s), %d total", n_auto, n_total)
     return result
 
 
 def run_workbuddy_sync(args, dataset_path, pricing_path):
-    """Exécute le connecteur WorkBuddy et fusionne. Ne bloque jamais les autres sources."""
+    """Run the WorkBuddy connector and merge. Never blocks other sources."""
     if getattr(args, "no_workbuddy", False):
         return None
     wb_args = argparse.Namespace(
@@ -210,21 +210,21 @@ def run_workbuddy_sync(args, dataset_path, pricing_path):
     result = extract_workbuddy.extract(wb_args, dataset_path, extract_workbuddy.WORKBUDDY_STATE_PATH)
     status = result.get("status")
     if status == "missing":
-        logger.info("WorkBuddy absent (%s) : autres sources conservées", result.get("db_path"))
+        logger.info("WorkBuddy missing (%s): keeping other sources", result.get("db_path"))
         return result
     if status == "error":
-        logger.warning("WorkBuddy indisponible (%s) : autres sources conservées",
+        logger.warning("WorkBuddy unavailable (%s): keeping other sources",
                        result.get("error") or result.get("db_path"))
         return result
     n_wb, n_total = merge_source_result(dataset_path, pricing_path, result)
-    logger.info("WorkBuddy fusionné : %d session(s) workbuddy, %d au total", n_wb, n_total)
+    logger.info("WorkBuddy merged: %d workbuddy session(s), %d total", n_wb, n_total)
     return result
 
 
 def open_report(path):
     uri = Path(os.path.abspath(path)).as_uri()
     if not webbrowser.open(uri):
-        logger.warning("impossible d'ouvrir le navigateur; rapport disponible : %s", path)
+        logger.warning("could not open the browser; report available at: %s", path)
 
 
 def diagnose():
@@ -263,7 +263,7 @@ def diagnose():
 def run(argv=None):
     args = parse_args(argv)
     if args.version:
-        print("OpenCost {}".format(VERSION))
+        print("AgentLedger {}".format(VERSION))
         return 0
 
     logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
@@ -277,7 +277,7 @@ def run(argv=None):
     if args.open_only:
         report_path = resources.report_path()
         if not os.path.exists(report_path):
-            logger.error("rapport introuvable: %s", report_path)
+            logger.error("report not found: %s", report_path)
             return 1
         if not args.no_open:
             open_report(report_path)
@@ -292,7 +292,7 @@ def run(argv=None):
 
     if not os.path.exists(db_path):
         if os.path.exists(dataset_path) and not args.watch:
-            logger.warning("base OpenCode introuvable; utilisation du dataset existant: %s", db_path)
+            logger.warning("OpenCode database not found; using the existing dataset: %s", db_path)
             run_kilo_sync(args, dataset_path, pricing_path)
             run_autoclaw_sync(args, dataset_path, pricing_path)
             run_workbuddy_sync(args, dataset_path, pricing_path)
@@ -300,8 +300,8 @@ def run(argv=None):
             if not args.no_open:
                 open_report(report_path)
             return 0
-        logger.error("base OpenCode introuvable: %s", db_path)
-        logger.error("utilisez --db <chemin> ou lancez OpenCode avant OpenCost")
+        logger.error("OpenCode database not found: %s", db_path)
+        logger.error("use --db <path> or launch OpenCode before AgentLedger")
         return 1
 
     extract_args = argparse.Namespace(db=db_path, full=args.full, since=args.since, build=False)
@@ -332,7 +332,7 @@ def main():
     try:
         raise SystemExit(run())
     except KeyboardInterrupt:
-        print("Arret.")
+        print("Stopping.")
         raise SystemExit(130)
 
 

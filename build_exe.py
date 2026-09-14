@@ -7,10 +7,10 @@ import sys
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Construit l'executable OpenCost avec PyInstaller")
-    parser.add_argument("--onedir", action="store_true", help="produit un dossier executable plus facile a deboguer")
-    parser.add_argument("--clean", action="store_true", help="nettoie le cache PyInstaller avant le build")
-    parser.add_argument("--confirm", action="store_true", help="autorise PyInstaller a ecraser la sortie existante")
+    parser = argparse.ArgumentParser(description="Build the AgentLedger executable with PyInstaller")
+    parser.add_argument("--onedir", action="store_true", help="produce a debug-friendly folder executable")
+    parser.add_argument("--clean", action="store_true", help="clean the PyInstaller cache before building")
+    parser.add_argument("--confirm", action="store_true", help="allow PyInstaller to overwrite existing output")
     args = parser.parse_args()
 
     root = os.path.dirname(os.path.abspath(__file__))
@@ -20,7 +20,7 @@ def main():
         "-m",
         "PyInstaller",
         "--name",
-        "OpenCost",
+        "AgentLedger",
         "--noupx",
         "--hidden-import",
         "sqlite3",
@@ -34,7 +34,7 @@ def main():
         command.extend(["--add-data", "{}{}{}".format(os.path.join(root, source), separator, destination)])
     command.extend(["--distpath", os.path.join(root, "dist"), "--workpath", os.path.join(root, "build"), os.path.join(root, "launcher.py")])
 
-    print("Build OpenCost -> {}".format("one-dir" if args.onedir else "one-file"))
+    print("Build AgentLedger -> {}".format("one-dir" if args.onedir else "one-file"))
     return subprocess.call(command, cwd=root)
 
 

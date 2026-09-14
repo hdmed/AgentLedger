@@ -6,7 +6,9 @@ data/workbuddy_sync_state.json
 dist/report.html
 dist/dataset.json
 dist/OpenCost*
+dist/AgentLedger*
 build/
 OpenCost.spec
+AgentLedger.spec
 __pycache__/
 *.pyc

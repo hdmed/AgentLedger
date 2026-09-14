@@ -1,0 +1,13 @@
+# Normalize line endings to LF on commit; working copies keep native endings.
+* text=auto eol=lf
+*.py text eol=lf
+*.md text eol=lf
+*.html text eol=lf
+*.js text eol=lf
+*.json text eol=lf
+*.yml text eol=lf
+*.ps1 text eol=crlf
+*.png binary
+*.ico binary
+*.exe binary
+*.db binary

@@ -17,11 +17,16 @@ class TestResources(unittest.TestCase):
 
     def test_user_override_uses_persistent_paths(self):
         with tempfile.TemporaryDirectory() as root:
-            with patch.dict(os.environ, {"OPENCOST_USER_DIR": root}, clear=False):
+            with patch.dict(os.environ, {"AGENTLEDGER_USER_DIR": root}, clear=False):
                 self.assertTrue(resources.dataset_path().startswith(root))
                 self.assertTrue(resources.state_path().startswith(root))
                 self.assertTrue(resources.report_path().startswith(root))
                 self.assertTrue(resources.pricing_path().startswith(root))
+
+    def test_legacy_env_still_honored(self):
+        with tempfile.TemporaryDirectory() as root:
+            with patch.dict(os.environ, {"OPENCOST_USER_DIR": root}, clear=False):
+                self.assertTrue(resources.dataset_path().startswith(root))
 
     def test_frozen_resources_use_meipass(self):
         with tempfile.TemporaryDirectory() as root:

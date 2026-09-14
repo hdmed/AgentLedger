@@ -1,72 +1,74 @@
-# OpenCost — documentation
+# AgentLedger — documentation
 
-## Positionnement
+## Positioning
 
-OpenCost extrait les sessions d'OpenCode depuis une base SQLite locale et génère un tableau de bord HTML autonome, sans appel réseau.
+AgentLedger extracts local AI agent sessions from on-disk databases and
+builds a standalone offline HTML dashboard — no network calls.
 
-L'objectif d'évolution est de fournir un exécutable local unique pour suivre l'activité et les coûts d'OpenCode, AutoClaw/OpenClaw, Kilo/KiloCode et d'autres agents, sans synchronisation cloud.
+The goal is a single local executable tracking activity and cost for
+OpenCode, AutoClaw/OpenClaw, Kilo/KiloCode, WorkBuddy and other agents,
+with no cloud sync.
 
-## Architecture actuelle
+## Current architecture
 
-- `extract.py` lit `opencode.db` en mode SQLite read-only, applique les prix et budgets, puis écrit les données générées.
-- `build_report.py` assemble le dataset, `templates/report_template.html` et `assets/chart.umd.min.js` dans `dist/report.html`.
-- `launcher.py` orchestre extraction, génération, diagnostic et ouverture du rapport, aussi bien depuis les sources que depuis l'EXE.
-- `resources.py` sélectionne les chemins des ressources et du dossier utilisateur selon le mode source ou frozen.
-- `build_exe.py` produit un exécutable Windows PyInstaller one-file ; `--onedir` permet un dossier de diagnostic.
-- Le projet AutoClaw/OpenClaw et son TDB autonome sont documentés dans [`AutCLW.md`](AutCLW.md) et [`Docs/AutCLW/TDB/`](AutCLW/TDB/).
-- `config/pricing.json` contient les prix USD par million de tokens, clés `providerID/modelID`.
-- `config/budgets.json` contient les plafonds globaux, par projet et par modèle sur 30 jours glissants.
-- `data/dataset.json`, `data/sync_state.json` et `dist/report.html` sont des artefacts générés et ignorés par Git.
+- `extract.py` reads `opencode.db` in read-only SQLite mode, applies pricing
+  and budgets, then writes the generated data.
+- `extract_kilo.py`, `extract_autoclaw.py`, `extract_workbuddy.py` are
+  read-only connectors for their respective sources, each with its own
+  watermark state file.
+- `launcher.py` merges all sources additively (dedup key
+  `(source, source_session_id)`), then builds the report.
+- `build_report.py` assembles the dataset, `templates/report_template.html`
+  and vendored `assets/chart.umd.min.js` into `dist/report.html`.
+- `resources.py` resolves source/frozen paths and the user folder.
+- `build_exe.py` produces a one-file Windows PyInstaller executable;
+  `--onedir` builds a debug-friendly folder.
+- `config/pricing.json` holds USD prices per million tokens, keyed
+  `providerID/modelID`.
+- `config/budgets.json` holds global, per-project and per-model caps over a
+  rolling 30-day window.
+- `data/dataset.json`, `data/*_sync_state.json` and `dist/report.html` are
+  generated artifacts ignored by Git.
 
-Flux actuel OpenCost :
-
-```text
-OpenCode SQLite -> extract.py -> dataset généré -> build_report.py -> rapport HTML
-```
-
-Flux AutoClaw/OpenClaw déjà disponible :
-
-```text
-CLI OpenClaw + transcripts -> collect.ps1 -> telemetry/ -> TDB HTML autonome
-```
-
-OpenCost doit lire la sortie `telemetry/` comme source additionnelle, sans modifier le collecteur AutoClaw.
-
-## Architecture cible
+Current flow:
 
 ```text
-Bases locales / sources
-  OpenCode | AutoClaw/OpenClaw | Kilo/KiloCode | autres agents
-              |
-        connecteurs read-only
-              |
-       modèle d'activité commun
-              |
-       synchronisation + déduplication
-              |
-        dataset unifié local
-              |
-        tableau de bord offline
-              |
-        exécutable autonome
+Local SQLite / telemetry -> read-only connectors -> additive merge -> dataset -> offline HTML report
 ```
 
-Les schémas et emplacements de Kilo/KiloCode doivent être inventoriés avant d'écrire son connecteur. AutoClaw/OpenClaw dispose déjà d'un collecteur et de formats de télémétrie documentés sous `Docs/AutCLW/TDB/` ; son intégration doit tout de même respecter le contrat commun et rester read-only.
+## Target architecture
+
+```text
+Local bases / sources
+  OpenCode | AutoClaw/OpenClaw | Kilo/KiloCode | WorkBuddy | other agents
+               |
+         read-only connectors
+               |
+        common activity model
+               |
+        sync + dedup
+               |
+        unified local dataset
+               |
+        offline dashboard
+               |
+        standalone executable
+```
 
 ## Invariants
 
-- Lire les bases sources en read-only ; ne jamais les modifier pour produire le rapport.
-- Conserver l'origine de chaque session et un identifiant stable pour la déduplication.
-- Normaliser les dates en UTC et les coûts en USD.
-- Conserver le mode offline comme comportement par défaut.
-- Séparer configuration, données utilisateur et artefacts générés.
-- Ajouter des fixtures de bases factices pour chaque connecteur avant le packaging.
-- Emballer le périmètre OpenCode autonome dès que ses ressources et ses chemins utilisateur sont validés ; ne repackager le dashboard unifié qu'après stabilisation du contrat des connecteurs et du modèle commun.
+- Read source databases read-only; never modify them to build the report.
+- Keep each session's origin and a stable id for dedup.
+- Normalize dates to UTC and costs to USD (WorkBuddy plan credits excepted
+  and labeled — see `WorkBuddy.md`).
+- Keep offline as the default mode.
+- Separate configuration, user data and generated artifacts.
+- Add dummy-database fixtures for each connector before packaging.
 
-## Commandes courantes
+## Common commands
 
 ```powershell
-python -m py_compile extract.py build_report.py resources.py launcher.py build_exe.py
+python -m py_compile extract.py extract_kilo.py extract_autoclaw.py extract_workbuddy.py build_report.py resources.py launcher.py build_exe.py notification.py
 python -m unittest discover -s tests -v
 python build_report.py --strict
 python launcher.py --diagnose
@@ -74,16 +76,22 @@ python launcher.py --no-open --full
 python build_exe.py --confirm
 ```
 
-`make test`, `make report`, `make all`, `make watch`, `make open` et `make clean` restent disponibles lorsque `make` est installé. Sur Windows, les commandes Python directes sont le fallback vérifiable.
+`make test`, `make report`, `make all`, `make watch`, `make open` and
+`make clean` remain available when `make` is installed. On Windows, the
+direct Python commands are the verifiable fallback.
 
-## Vérification
+## Verification
 
-La CI utilise Python 3.11, compile les entrypoints, exécute les tests puis lance `build_report.py --strict`. Le mode `--strict` vérifie la présence de Chart.js. Le mode `--external` crée un dataset adjacent et nécessite un serveur HTTP : il n'est pas entièrement autonome. L'EXE utilise `%LOCALAPPDATA%\OpenCost` pour les données et la configuration utilisateur, et conserve les bases sources en lecture seule.
+CI runs on Python 3.11 (Linux + Windows): compile entrypoints, run tests,
+then `build_report.py --strict`. `--strict` verifies the Chart.js asset.
+`--external` creates an adjacent dataset and needs an HTTP server: it is not
+fully standalone. The EXE keeps data and user configuration under
+`%LOCALAPPDATA%\AgentLedger` and keeps source databases read-only.
 
 ## Index
 
-- [Architecture et modèle de données cible](architecture.md)
-- [Tableau de bord — structure et navigation](dashboard.md)
-- [AutoClaw / OpenClaw — connecteur cible](AutCLW.md)
-- [WorkBuddy — connecteur](WorkBuddy.md)
-- [Plan de réalisation](plan.md)
+- [Target architecture and data model](architecture.md)
+- [Dashboard — structure and navigation](dashboard.md)
+- [AutoClaw / OpenClaw connector](AutCLW.md)
+- [WorkBuddy connector](WorkBuddy.md)
+- [Roadmap](plan.md)

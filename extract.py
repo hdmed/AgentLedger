@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
-"""Extrait l'usage des modèles AI depuis la base locale d'OpenCode.
+"""Extract AI model usage from the local OpenCode database.
 
-Lecture 100%% READ-ONLY de opencode.db (SQLite, stdlib python).
-Produit data/dataset.json (source du rapport visuel hors-ligne).
-Coûts : par défaut la valeur calculée par OpenCode ; surchargés si le
-modèle est présent dans config/pricing.json.
+100%% READ-ONLY reads of opencode.db (SQLite, python stdlib).
+Produces data/dataset.json (source of the offline visual report).
+Costs: OpenCode's computed value by default; overridden when the
+model is present in config/pricing.json.
 
-Usage :
-  python extract.py                # extraction incrémentale (delta depuis dernier sync)
-  python extract.py --full         # re-extraction complète de toutes les sessions
-  python extract.py --db <chemin>  # base OpenCode personnalisée
-  python extract.py --watch        # boucle : surveille opencode.db et re-extrait
-  python extract.py --watch --build # et régénère aussi dist/report.html
+Usage:
+  python extract.py                # incremental extraction (delta since last sync)
+  python extract.py --full         # full re-extraction of all sessions
+  python extract.py --db <path>    # custom OpenCode database
+  python extract.py --watch        # loop: watch opencode.db and re-extract
+  python extract.py --watch --build # also regenerate dist/report.html
 """
 
 from __future__ import annotations
@@ -52,10 +52,10 @@ def load_json(path: str, default: Any) -> Any:
         with open(path, "r", encoding="utf-8") as f:
             return json.load(f)
     except json.JSONDecodeError as e:
-        logger.warning("JSON corrompu ({}), utilisation defaut".format(path, e))
+        logger.warning("corrupt JSON ({}), using default".format(path, e))
         try:
             os.replace(path, path + ".corrupt." + str(int(time.time())))
-            # rotation: garder 3 derniers .corrupt
+            # rotation: keep the last 3 .corrupt files
             d, b = os.path.dirname(path) or ".", os.path.basename(path)
             olds = sorted([os.path.join(d, f) for f in os.listdir(d) if f.startswith(b + ".corrupt.")])
             for old in olds[:-3]:
@@ -79,11 +79,11 @@ def load_state(path: str | None = None) -> dict[str, Any]:
 
 
 def validate_pricing_config(models_cfg: dict[str, Any]) -> dict[str, Any]:
-    """Valide la configuration des prix et nettoie les entrées invalides."""
+    """Validate the pricing configuration and drop invalid entries."""
     valid_cfg = models_cfg.copy()
     for k, cfg in list(valid_cfg.items()):
         if not isinstance(cfg, dict):
-            logger.warning("pricing '{}' ignore (pas un objet)".format(k))
+            logger.warning("pricing '{}' ignored (not an object)".format(k))
             valid_cfg.pop(k, None)
             continue
         for field in ("input_per_1M", "output_per_1M", "cache_read_per_1M", "cache_write_per_1M", "reasoning_per_1M"):
@@ -91,19 +91,19 @@ def validate_pricing_config(models_cfg: dict[str, Any]) -> dict[str, Any]:
                 try:
                     v = float(cfg[field])
                     if v < 0:
-                        logger.warning("pricing '{}' {} negatif, force 0".format(k, field))
+                        logger.warning("pricing '{}' {} negative, forcing 0".format(k, field))
                         valid_cfg[k][field] = 0.0
                 except (TypeError, ValueError):
-                    logger.warning("pricing '{}' {}='{}' invalide, ignore".format(k, field, cfg[field]))
+                    logger.warning("pricing '{}' {}='{}' invalid, ignored".format(k, field, cfg[field]))
                     valid_cfg[k].pop(field, None)
     return valid_cfg
 
 
 def parse_model(raw: Any) -> tuple[str, str] | None:
-    """Normalise un champ modèle brut -> (provider_id, model_id).
+    """Normalize a raw model field -> (provider_id, model_id).
 
-    Accepte le JSON OpenCode (providerID/id), les dicts des connecteurs
-    (provider/model) et les chaînes "provider/model" ou modèle nu.
+    Accepts OpenCode JSON (providerID/id), connector dicts
+    (provider/model) and "provider/model" or bare-model strings.
     """
     if not raw:
         return None
@@ -126,7 +126,7 @@ def parse_model(raw: Any) -> tuple[str, str] | None:
 
 
 def apply_pricing(sessions: list[dict[str, Any]], pricing: dict[str, Any] | None) -> tuple[float, list[dict[str, Any]]]:
-    """Surcharge le coût des sessions quand un prix est déclaré pour le modèle.
+    """Override session costs when a price is declared for the model.
 
     pricing = {"models": {"provider/model": {"input_per_1M":.., "output_per_1M":..,
               "cache_read_per_1M":.., "cache_write_per_1M":.., "reasoning_per_1M":..}}}
@@ -175,11 +175,11 @@ def apply_pricing(sessions: list[dict[str, Any]], pricing: dict[str, Any] | None
 
 
 def to_seconds(ts: Any) -> Any:
-    """Normalise un horodatage OpenCode en secondes UTC.
+    """Normalize an OpenCode timestamp to UTC seconds.
 
-    Les bases récentes stockent des millisecondes (13 chiffres) ; les
-    anciennes des secondes. heuristic : > 1e11 => millisecondes.
-    Retourne la valeur d'origine si elle n'est pas numérique.
+    Recent databases store milliseconds (13 digits); older ones store
+    seconds. Heuristic: > 1e11 means milliseconds.
+    Returns the original value when it is not numeric.
     """
     try:
         v = int(float(ts))
@@ -191,11 +191,11 @@ def to_seconds(ts: Any) -> Any:
 
 
 def db_threshold(watermark: int, raw_max: int = 0) -> int:
-    """Seuil comparable aux valeurs brutes d'une base (ms ou s).
+    """Threshold comparable to a database's raw values (ms or s).
 
-    Le watermark est stocké en secondes ; les bases récentes sont en
-    millisecondes, les anciennes en secondes. `raw_max` (MAX brut de la
-    base) détermine l'unité réelle pour éviter les faux positifs/négatifs.
+    The watermark is stored in seconds; recent databases use
+    milliseconds, older ones seconds. `raw_max` (the database's raw MAX)
+    determines the real unit to avoid false positives/negatives.
     """
     try:
         w = int(watermark)
@@ -211,7 +211,7 @@ def db_threshold(watermark: int, raw_max: int = 0) -> int:
 
 
 def fetch_sessions(db_path: str, watermark: int, full: bool) -> list[dict[str, Any]]:
-    """Retourne les sessions (delta si pas full). Lecture seule."""
+    """Return sessions (delta unless full). Read-only."""
     uri = "file:{}?mode=ro".format(db_path.replace("\\", "/"))
     conn = sqlite3.connect(uri, uri=True, timeout=5)
     conn.row_factory = sqlite3.Row
@@ -265,8 +265,8 @@ def extract(
     budgets_path = budgets_path or BUDGETS_PATH
     db_path = os.path.expanduser(args.db)
     if not os.path.exists(db_path):
-        logger.error("base OpenCode introuvable: {}".format(db_path))
-        print("Passer --db <chemin> (defaut ~/.local/share/opencode/opencode.db)")
+        logger.error("OpenCode database not found: {}".format(db_path))
+        print("Pass --db <path> (default ~/.local/share/opencode/opencode.db)")
         sys.exit(1)
 
     pricing = load_json(pricing_path, {"models": {}})
@@ -282,7 +282,7 @@ def extract(
             watermark = int(dt.timestamp())
             merged = {}
         except ValueError:
-            logger.error("Date invalide pour --since: {}. Format attendu: AAAA-MM-JJ".format(since))
+            logger.error("Invalid date for --since: {}. Expected format: YYYY-MM-DD".format(since))
             sys.exit(1)
     else:
         state = load_state(state_path)
@@ -294,7 +294,7 @@ def extract(
     started = time.time()
     new_rows = fetch_sessions(db_path, watermark, full)
     if not full and not since:
-        # nettoyage : on retire les sessions supprimées/archivées (SELECT id seul, léger)
+        # cleanup: drop deleted/archived sessions (lightweight SELECT id)
         uri = "file:{}?mode=ro".format(db_path.replace("\\", "/"))
         conn = sqlite3.connect(uri, uri=True, timeout=5)
         try:
@@ -310,10 +310,10 @@ def extract(
     for s in sessions:
         s.setdefault("source", "opencode")
         s.setdefault("source_session_id", s.get("id"))
-        # guérison : anciens datasets stockés en millisecondes
+        # heal: legacy datasets stored in milliseconds
         s["time_created"] = to_seconds(s.get("time_created"))
         s["time_updated"] = to_seconds(s.get("time_updated"))
-    logger.info(" {} session(s) nouvelle(s)/mise(s) a jour ({} au total)".format(
+    logger.info(" {} new/updated session(s) ({} total)".format(
         len(new_rows), len(sessions)))
 
     total_cost, models = apply_pricing(sessions, pricing)
@@ -326,7 +326,7 @@ def extract(
 
         g_limit = budgets.get("global", {}).get("monthly")
         if g_limit and month_cost > g_limit:
-            logger.warning("Budget GLOBAL depasse: {:.2f} / {:.2f} $ (30j)".format(month_cost, g_limit))
+            logger.warning("GLOBAL budget exceeded: {:.2f} / {:.2f} $ (30d)".format(month_cost, g_limit))
 
         by_proj_limits = budgets.get("by_project", {})
         for proj, cfg in by_proj_limits.items():
@@ -334,7 +334,7 @@ def extract(
             if p_limit:
                 p_cost = sum(float(s.get("cost", 0)) for s in sessions if s.get("project_name") == proj and int(s.get("time_created", 0)) >= month_ago)
                 if p_cost > p_limit:
-                    logger.warning("Budget PROJET '{}' depasse: {:.2f} / {:.2f} $ (30j)".format(proj, p_cost, p_limit))
+                    logger.warning("PROJECT budget '{}' exceeded: {:.2f} / {:.2f} $ (30d)".format(proj, p_cost, p_limit))
 
         by_mod_limits = budgets.get("by_model", {})
         for mod, cfg in by_mod_limits.items():
@@ -342,9 +342,9 @@ def extract(
             if m_limit:
                 m_cost = sum(float(s.get("cost", 0)) for s in sessions if s.get("model_label") == mod and int(s.get("time_created", 0)) >= month_ago)
                 if m_cost > m_limit:
-                    logger.warning("Budget MODELE '{}' depasse: {:.2f} / {:.2f} $ (30j)".format(mod, m_cost, m_limit))
+                    logger.warning("MODEL budget '{}' exceeded: {:.2f} / {:.2f} $ (30d)".format(mod, m_cost, m_limit))
 
-    # prochain watermark = max COALESCE(time_updated, time_created) des lignes lues
+    # next watermark = max COALESCE(time_updated, time_created) of the rows read
     next_wm = watermark
     for r in new_rows:
         ts = r.get("time_updated") or r.get("time_created")
@@ -374,7 +374,7 @@ def extract(
     save_json(dataset_path, dataset)
     save_json(state_path, {"last_time_updated": next_wm})
     logger.info("OK -> {}".format(dataset_path))
-    logger.info("{} sessions, cout total {:.4f}, {}s".format(
+    logger.info("{} sessions, total cost {:.4f}, {}s".format(
         len(sessions), total_cost, round(time.time() - started, 2)))
     return True
 
@@ -414,7 +414,7 @@ def watch(
     pricing_path = pricing_path or PRICING_PATH
     budgets_path = budgets_path or BUDGETS_PATH
     report_path = report_path or REPORT_PATH
-    # essai watchdog (optionnel, sinon poll)
+    # try watchdog (optional, otherwise poll)
     try:
         from watchdog.observers import Observer  # type: ignore
         from watchdog.events import FileSystemEventHandler  # type: ignore
@@ -422,7 +422,7 @@ def watch(
     except ImportError:
         has_watchdog = False
     if has_watchdog:
-        logger.info("watchdog actif sur {}".format(os.path.dirname(db_path)))
+        logger.info("watchdog active on {}".format(os.path.dirname(db_path)))
         last_max = _db_max_time(db_path)
         if run_initial:
             extract(args, dataset_path, state_path, pricing_path, budgets_path)
@@ -431,7 +431,7 @@ def watch(
         class H(FileSystemEventHandler):
             def on_modified(self, event):
                 if os.path.abspath(event.src_path) == os.path.abspath(db_path):
-                    logger.info("changement detecte -> re-extraction")
+                    logger.info("change detected -> re-extracting")
                     extract(args, dataset_path, state_path, pricing_path, budgets_path)
                     if args.build:
                         build_report(dataset_path, report_path)
@@ -441,7 +441,7 @@ def watch(
             while True: time.sleep(1)
         except KeyboardInterrupt:
             obs.stop(); obs.join(); return
-    logger.info("surveille {} toutes les 15s (Ctrl+C pour arreter)".format(db_path))
+    logger.info("watching {} every 15s (Ctrl+C to stop)".format(db_path))
     last_max = _db_max_time(db_path)
     last_mtime = 0
     try:
@@ -460,7 +460,7 @@ def watch(
         except OSError:
             mtime = last_mtime
         if cur_max != last_max or mtime != last_mtime:
-            logger.info("changement detecte -> re-extraction")
+            logger.info("change detected -> re-extracting")
             last_max, last_mtime = cur_max, mtime
             extract(args, dataset_path, state_path, pricing_path, budgets_path)
             if args.build:
@@ -468,21 +468,21 @@ def watch(
 
 
 def main():
-    ap = argparse.ArgumentParser(description="Extraction usage AI depuis opencode.db")
+    ap = argparse.ArgumentParser(description="AI usage extraction from opencode.db")
     ap.add_argument("--db", default=os.environ.get("OPENCODE_DB") or DEFAULT_DB,
-                    help="chemin vers opencode.db")
+                    help="path to opencode.db")
     ap.add_argument("--full", action="store_true",
-                    help="re-extraction complete (ignore le cache incremental)")
+                    help="full re-extraction (ignore the incremental cache)")
     ap.add_argument("--since", type=str,
-                    help="extraction depuis une date ISO (AAAA-MM-JJ), ignore le watermark")
+                    help="extract from an ISO date (YYYY-MM-DD), ignore the watermark")
     ap.add_argument("--sync-now", action="store_true",
-                    help="force l'extraction immédiate")
+                    help="force immediate extraction")
     ap.add_argument("--watch", action="store_true",
-                    help="surveille la base et re-extrait au changement")
+                    help="watch the database and re-extract on change")
     ap.add_argument("--build", action="store_true",
-                    help="avec --watch : regenere aussi dist/report.html")
+                    help="with --watch: also regenerate dist/report.html")
     ap.add_argument("--out-dataset", default=DATASET_PATH,
-                    help="chemin vers le fichier dataset.json de sortie")
+                    help="path to the output dataset.json file")
     args = ap.parse_args()
 
     if args.watch:

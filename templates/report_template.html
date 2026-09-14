@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Usage AI - Rapport OpenCode</title>
+<title>AgentLedger - AI Usage Report</title>
 <style>
 :root{
   --bg:#0f1220; --panel:#171b2e; --panel2:#1f2440; --line:#2a3052;
@@ -129,7 +129,7 @@ tr:hover{background:var(--panel2)}
 #filters-panel{overflow:hidden;max-height:600px;transition:max-height .25s ease-out}
 #filters-panel.collapsed{max-height:0!important;margin:0!important}
 #filters-panel.collapsed .filters{margin:0}
-/* drawer détail session */
+/* session detail drawer */
 #drawer-overlay{position:fixed;inset:0;background:rgba(5,8,20,.6);display:none;z-index:9998}
 #drawer-overlay.open{display:block}
 #drawer{position:fixed;top:0;right:0;bottom:0;width:min(440px,94vw);background:var(--panel);border-left:1px solid var(--line);z-index:9999;transform:translateX(105%);transition:transform .25s ease-out;display:flex;flex-direction:column;box-shadow:-20px 0 60px rgba(0,0,0,.5)}
@@ -145,17 +145,17 @@ tr:hover{background:var(--panel2)}
 </head>
 <body>
 <header>
-  <h1>Usage AI &mdash; Rapport OpenCode</h1>
-  <nav class="tabs" role="tablist" aria-label="Vues">
-    <button class="tab-btn active" data-view="overview" role="tab" aria-selected="true">📊 Vue d'ensemble</button>
-    <button class="tab-btn" data-view="modeles" role="tab" aria-selected="false">🧠 Modèles</button>
-    <button class="tab-btn" data-view="projets" role="tab" aria-selected="false">📁 Projets</button>
+  <h1>AgentLedger &mdash; AI usage</h1>
+  <nav class="tabs" role="tablist" aria-label="Views">
+    <button class="tab-btn active" data-view="overview" role="tab" aria-selected="true">📊 Overview</button>
+    <button class="tab-btn" data-view="modeles" role="tab" aria-selected="false">🧠 Models</button>
+    <button class="tab-btn" data-view="projets" role="tab" aria-selected="false">📁 Projects</button>
     <button class="tab-btn" data-view="sessions" role="tab" aria-selected="false">📋 Sessions</button>
   </nav>
   <span class="sub" id="meta-sub"></span>
-  <button class="fbtn" id="theme-toggle" title="Thème clair/sombre">🌓</button>
-  <button class="fbtn" id="share-link" title="Copier lien filtré">🔗 Partager</button>
-  <button class="fbtn" id="print-btn" title="Imprimer / PDF">🖨️ Imprimer</button>
+  <button class="fbtn" id="theme-toggle" title="Light/dark theme">🌓</button>
+  <button class="fbtn" id="share-link" title="Copy filtered link">🔗 Share</button>
+  <button class="fbtn" id="print-btn" title="Print / PDF">🖨️ Print</button>
   <span style="flex:1"></span>
   <span class="tag" id="db-line"></span>
 </header>
@@ -164,104 +164,104 @@ tr:hover{background:var(--panel2)}
 
   <div id="filterbar">
     <div id="filterbar-quick">
-      <div class="fld"><label>De</label><input type="date" id="f-from"></div>
-      <div class="fld"><label>Au</label><input type="date" id="f-to"></div>
-      <div class="fld"><label>Recherche titre</label><input type="text" id="f-q" placeholder="session, t&acirc;che..."></div>
-      <div class="fld"><label>Source</label><select id="f-source"><option value="*">Toutes</option></select></div>
-      <div><button class="fbtn" id="filters-toggle" aria-expanded="false">＋ Filtres</button></div>
-      <div><button class="fbtn" id="f-reset">R&eacute;initialiser</button></div>
+      <div class="fld"><label>From</label><input type="date" id="f-from"></div>
+      <div class="fld"><label>To</label><input type="date" id="f-to"></div>
+      <div class="fld"><label>Title search</label><input type="text" id="f-q" placeholder="session, task..."></div>
+      <div class="fld"><label>Source</label><select id="f-source"><option value="*">All</option></select></div>
+      <div><button class="fbtn" id="filters-toggle" aria-expanded="false">＋ Filters</button></div>
+      <div><button class="fbtn" id="f-reset">Reset</button></div>
     </div>
     <div id="filters-panel" class="collapsed">
   <div class="filters">
-    <div class="fld"><label>Mod&egrave;les (multi)</label><select multiple id="f-model"></select></div>
-    <div class="fld"><label>Agent</label><select id="f-agent"><option value="*">Tous</option></select></div>
-    <div class="fld"><label>Projet</label><select id="f-proj"><option value="*">Tous</option></select></div>
-    <div class="fld"><label>Équipe</label><select id="f-team"><option value="*">Toutes</option></select></div>
-    <div class="fld"><label>Co&ucirc;t min ($)</label><input type="number" id="f-cmin" min="0" step="0.0001" placeholder="0"></div>
-    <div class="fld"><label>Co&ucirc;t max ($)</label><input type="number" id="f-cmax" min="0" step="0.0001" placeholder="&infin;"></div>
+    <div class="fld"><label>Models (multi)</label><select multiple id="f-model"></select></div>
+    <div class="fld"><label>Agent</label><select id="f-agent"><option value="*">All</option></select></div>
+    <div class="fld"><label>Project</label><select id="f-proj"><option value="*">All</option></select></div>
+    <div class="fld"><label>Team</label><select id="f-team"><option value="*">All</option></select></div>
+    <div class="fld"><label>Min cost ($)</label><input type="number" id="f-cmin" min="0" step="0.0001" placeholder="0"></div>
+    <div class="fld"><label>Max cost ($)</label><input type="number" id="f-cmax" min="0" step="0.0001" placeholder="&infin;"></div>
   </div>
     </div>
   </div>
 
-  <section class="view active" id="view-overview" role="tabpanel" aria-label="Vue d'ensemble">
+  <section class="view active" id="view-overview" role="tabpanel" aria-label="Overview">
   <div class="kpis" id="kpis" aria-live="polite"></div>
   <div class="budget-grid" id="budget-grid"></div>
-  <div class="card" id="anomaly-card" style="display:none"><h3>Anomalies d&eacute;tect&eacute;es <span class="tag" id="anomaly-count"></span></h3><div id="anomaly-list" class="small"></div></div>
+  <div class="card" id="anomaly-card" style="display:none"><h3>Anomalies detected <span class="tag" id="anomaly-count"></span></h3><div id="anomaly-list" class="small"></div></div>
 
   <div class="charts" id="charts">
-    <div class="chart" data-chart="c-cost-hist"><div class="chart-head"><h3>Histogramme coût / session</h3><div class="chart-tools"><button class="icon-btn" data-zoom="c-cost-hist" title="Zoom">⛶</button><button class="icon-btn" data-png="c-cost-hist" title="PNG">⬇</button></div></div><div class="canvas-wrap"><canvas id="c-cost-hist"></canvas></div></div>
-    <div class="chart" data-chart="c-cache"><div class="chart-head"><h3>Cache & erreurs</h3><div class="chart-tools"><button class="icon-btn" data-zoom="c-cache" title="Zoom">⛶</button><button class="icon-btn" data-png="c-cache" title="PNG">⬇</button></div></div><div class="canvas-wrap"><canvas id="c-cache"></canvas></div></div>
-    <div class="chart chart-full" data-chart="c-forecast"><div class="chart-head"><h3>Prévision 30j (coût)</h3><div class="chart-tools"><button class="icon-btn" data-zoom="c-forecast" title="Zoom">⛶</button><button class="icon-btn" data-png="c-forecast" title="PNG">⬇</button></div></div><div class="canvas-wrap"><canvas id="c-forecast"></canvas></div></div>
-    <div class="chart chart-full" data-chart="c-cost-day"><div class="chart-head"><h3>Coût par jour (par modèle)</h3><div class="chart-tools"><button class="icon-btn" data-zoom="c-cost-day" title="Zoom">⛶</button><button class="icon-btn" data-png="c-cost-day" title="PNG">⬇</button></div></div><div class="canvas-wrap"><canvas id="c-cost-day"></canvas></div></div>
-    <div class="chart chart-full" data-chart="c-tok-day"><div class="chart-head"><h3>Tokens par jour (par modèle)</h3><div class="chart-tools"><button class="icon-btn" data-zoom="c-tok-day" title="Zoom">⛶</button><button class="icon-btn" data-png="c-tok-day" title="PNG">⬇</button></div></div><div class="canvas-wrap"><canvas id="c-tok-day"></canvas></div></div>
+    <div class="chart" data-chart="c-cost-hist"><div class="chart-head"><h3>Cost / session histogram</h3><div class="chart-tools"><button class="icon-btn" data-zoom="c-cost-hist" title="Zoom">⛶</button><button class="icon-btn" data-png="c-cost-hist" title="PNG">⬇</button></div></div><div class="canvas-wrap"><canvas id="c-cost-hist"></canvas></div></div>
+    <div class="chart" data-chart="c-cache"><div class="chart-head"><h3>Cache & errors</h3><div class="chart-tools"><button class="icon-btn" data-zoom="c-cache" title="Zoom">⛶</button><button class="icon-btn" data-png="c-cache" title="PNG">⬇</button></div></div><div class="canvas-wrap"><canvas id="c-cache"></canvas></div></div>
+    <div class="chart chart-full" data-chart="c-forecast"><div class="chart-head"><h3>30-day cost forecast</h3><div class="chart-tools"><button class="icon-btn" data-zoom="c-forecast" title="Zoom">⛶</button><button class="icon-btn" data-png="c-forecast" title="PNG">⬇</button></div></div><div class="canvas-wrap"><canvas id="c-forecast"></canvas></div></div>
+    <div class="chart chart-full" data-chart="c-cost-day"><div class="chart-head"><h3>Cost per day (by model)</h3><div class="chart-tools"><button class="icon-btn" data-zoom="c-cost-day" title="Zoom">⛶</button><button class="icon-btn" data-png="c-cost-day" title="PNG">⬇</button></div></div><div class="canvas-wrap"><canvas id="c-cost-day"></canvas></div></div>
+    <div class="chart chart-full" data-chart="c-tok-day"><div class="chart-head"><h3>Tokens per day (by model)</h3><div class="chart-tools"><button class="icon-btn" data-zoom="c-tok-day" title="Zoom">⛶</button><button class="icon-btn" data-png="c-tok-day" title="PNG">⬇</button></div></div><div class="canvas-wrap"><canvas id="c-tok-day"></canvas></div></div>
   </div>
   </section>
-  <section class="view" id="view-modeles" role="tabpanel" aria-label="Modèles">
+  <section class="view" id="view-modeles" role="tabpanel" aria-label="Models">
   <div class="charts">
-    <div class="chart" data-chart="c-cost-model"><div class="chart-head"><h3>Coût par modèle</h3><div class="chart-tools"><button class="icon-btn" data-zoom="c-cost-model" title="Zoom">⛶</button><button class="icon-btn" data-png="c-cost-model" title="PNG">⬇</button></div></div><div class="canvas-wrap"><canvas id="c-cost-model"></canvas></div></div>
+    <div class="chart" data-chart="c-cost-model"><div class="chart-head"><h3>Cost by model</h3><div class="chart-tools"><button class="icon-btn" data-zoom="c-cost-model" title="Zoom">⛶</button><button class="icon-btn" data-png="c-cost-model" title="PNG">⬇</button></div></div><div class="canvas-wrap"><canvas id="c-cost-model"></canvas></div></div>
   </div>
-  <div class="card" id="compare-card" style="display:none"><h3>Comparaison modèles (sélection multiple)</h3><div class="compare-grid" id="compare-grid"></div><div class="canvas-wrap" style="height:260px;position:relative;margin-top:12px"><canvas id="c-compare"></canvas></div></div>
+  <div class="card" id="compare-card" style="display:none"><h3>Model comparison (multiple selection)</h3><div class="compare-grid" id="compare-grid"></div><div class="canvas-wrap" style="height:260px;position:relative;margin-top:12px"><canvas id="c-compare"></canvas></div></div>
 
   <details class="card" id="pricing-panel">
-    <summary>Personnaliser les co&ucirc;ts par mod&egrave;le (&dollar;/1M tokens)</summary>
-    <div class="note">Un champ vide = aucun prix d&eacute;clar&eacute; &rarr; le co&ucirc;t calcul&eacute; par OpenCode est conserv&eacute;. Cliquez &laquo;&nbsp;Exporter pricing.json&nbsp;&raquo;, remplacez <b>config/pricing.json</b>, puis relancez <code>python extract.py --full &amp;&amp; python build_report.py</code>.</div>
+    <summary>Customize per-model costs (&dollar;/1M tokens)</summary>
+    <div class="note">An empty field = no declared price &rarr; the cost computed by the agent is kept. Click &laquo;&nbsp;Export pricing.json&nbsp;&raquo;, replace <b>config/pricing.json</b>, then rerun <code>python extract.py --full &amp;&amp; python build_report.py</code>.</div>
     <div class="pricing-rows" id="pricing-rows"></div>
     <div class="row-actions">
-      <button class="fbtn" id="p-export">Exporter pricing.json</button>
-      <button class="fbtn" id="p-clear-draft">Effacer brouillon</button>
+      <button class="fbtn" id="p-export">Export pricing.json</button>
+      <button class="fbtn" id="p-clear-draft">Clear draft</button>
       <span class="small" id="p-status"></span>
     </div>
-    <div class="note">Astuce : la saisie est appliqu&eacute;e <b>en direct</b> (live) et sauvegard&eacute;e en brouillon navigateur. Exportez pour p&eacute;renniser c&ocirc;t&eacute; build.</div>
+    <div class="note">Tip: typing applies <b>live</b> and saves a browser draft. Export to persist on the build side.</div>
   </details>
   </section>
-  <section class="view" id="view-projets" role="tabpanel" aria-label="Projets">
+  <section class="view" id="view-projets" role="tabpanel" aria-label="Projects">
   <div class="charts">
-    <div class="chart" data-chart="c-cost-agent"><div class="chart-head"><h3>Coût par agent</h3><div class="chart-tools"><button class="icon-btn" data-zoom="c-cost-agent" title="Zoom">⛶</button><button class="icon-btn" data-png="c-cost-agent" title="PNG">⬇</button></div></div><div class="canvas-wrap"><canvas id="c-cost-agent"></canvas></div></div>
-    <div class="chart" data-chart="c-cost-team"><div class="chart-head"><h3>Coût par équipe</h3><div class="chart-tools"><button class="icon-btn" data-zoom="c-cost-team" title="Zoom">⛶</button><button class="icon-btn" data-png="c-cost-team" title="PNG">⬇</button></div></div><div class="canvas-wrap"><canvas id="c-cost-team"></canvas></div></div>
+    <div class="chart" data-chart="c-cost-agent"><div class="chart-head"><h3>Cost by agent</h3><div class="chart-tools"><button class="icon-btn" data-zoom="c-cost-agent" title="Zoom">⛶</button><button class="icon-btn" data-png="c-cost-agent" title="PNG">⬇</button></div></div><div class="canvas-wrap"><canvas id="c-cost-agent"></canvas></div></div>
+    <div class="chart" data-chart="c-cost-team"><div class="chart-head"><h3>Cost by team</h3><div class="chart-tools"><button class="icon-btn" data-zoom="c-cost-team" title="Zoom">⛶</button><button class="icon-btn" data-png="c-cost-team" title="PNG">⬇</button></div></div><div class="canvas-wrap"><canvas id="c-cost-team"></canvas></div></div>
   </div>
 
   <details class="card" id="budgets-edit-panel">
-    <summary>Budgets mensuels par modèle & projet ($)</summary>
-    <div class="note">Définissez les plafonds mensuels (30j glissants). Vide = pas de plafond. Live + brouillon navigateur comme pricing.</div>
+    <summary>Monthly budgets per model & project ($)</summary>
+    <div class="note">Set monthly caps (rolling 30d). Empty = no cap. Live + browser draft like pricing.</div>
     <div class="pricing-rows" id="budgets-edit-rows"></div>
     <div class="row-actions">
-      <button class="fbtn" id="b-export">Exporter budgets.json</button>
-      <button class="fbtn" id="b-clear-draft">Effacer brouillon</button>
+      <button class="fbtn" id="b-export">Export budgets.json</button>
+      <button class="fbtn" id="b-clear-draft">Clear draft</button>
       <span class="small" id="b-status"></span>
     </div>
-    <div class="note">Global = plafond consolidé. Par modèle/projet = suivi détaillé dans la grille Budgets ci-dessus.</div>
+    <div class="note">Global = consolidated cap. Per model/project = detailed tracking in the Budgets grid above.</div>
   </details>
   </section>
   <section class="view" id="view-sessions" role="tabpanel" aria-label="Sessions">
   <div class="card" style="margin-bottom:12px;display:flex;gap:8px;align-items:center">
-    <span style="font-size:16px" aria-hidden="true">💬</span><input type="text" id="nlq" aria-label="Recherche naturelle (NLQ)" placeholder="Ex: coût big-pickle mars, projet OpenCost, anomalie" style="flex:1;border:none;background:transparent;color:var(--txt);outline:none;font-size:13px">
+    <span style="font-size:16px" aria-hidden="true">💬</span><input type="text" id="nlq" aria-label="Natural language search (NLQ)" placeholder="E.g.: big-pickle cost march, OpenCost project, anomaly" style="flex:1;border:none;background:transparent;color:var(--txt);outline:none;font-size:13px">
     <button class="fbtn" id="nlq-go">Go</button><span class="small" id="nlq-hint" aria-live="polite"></span>
   </div>
 
   <div class="card" id="table-card">
     <div class="row-actions">
-      <h3 style="margin:0;flex:1">Sessions d&eacute;taill&eacute;es <span class="tag" id="t-count" aria-live="polite" aria-atomic="true"></span></h3>
-      <button class="fbtn" id="t-csv">Exporter CSV</button>
-      <button class="fbtn" id="t-json">Exporter JSON</button>
+      <h3 style="margin:0;flex:1">Detailed sessions <span class="tag" id="t-count" aria-live="polite" aria-atomic="true"></span></h3>
+      <button class="fbtn" id="t-csv">Export CSV</button>
+      <button class="fbtn" id="t-json">Export JSON</button>
     </div>
     <div class="row-actions" id="t-nav" style="justify-content:center;margin-bottom:8px" aria-live="polite"></div>
     <div class="tab-scroll">
-      <table role="table" aria-label="Sessions d&eacute;taill&eacute;es">
+      <table role="table" aria-label="Detailed sessions">
         <thead><tr>
           <th data-k="time_created" scope="col" aria-sort="descending">Date</th>
-          <th data-k="title" scope="col">Titre</th>
-          <th data-k="model_label" scope="col">Mod&egrave;le</th>
+          <th data-k="title" scope="col">Title</th>
+          <th data-k="model_label" scope="col">Model</th>
           <th data-k="agent" scope="col">Agent</th>
-          <th data-k="project_name" scope="col">Projet</th>
+          <th data-k="project_name" scope="col">Project</th>
           <th data-k="source" scope="col">Source</th>
-          <th data-k="team" scope="col">Équipe</th>
-          <th data-k="cost" scope="col" aria-sort="descending">Co&ucirc;t</th>
+          <th data-k="team" scope="col">Team</th>
+          <th data-k="cost" scope="col" aria-sort="descending">Cost</th>
           <th data-k="tokens_input" scope="col">Tokens in</th>
           <th data-k="tokens_output" scope="col">Tokens out</th>
-          <th data-k="tokens_cache_read" scope="col">Cache lu</th>
+          <th data-k="tokens_cache_read" scope="col">Cache read</th>
           <th data-k="tokens_reasoning" scope="col">Reasoning</th>
-          <th data-k="tokens_cache_write" scope="col">Cache écr.</th>
-          <th data-k="cost_source" scope="col">Coût</th>
+          <th data-k="tokens_cache_write" scope="col">Cache written</th>
+          <th data-k="cost_source" scope="col">Cost</th>
           <th>Notes</th>
         </tr></thead>
         <tbody id="tbody"></tbody>
@@ -271,16 +271,16 @@ tr:hover{background:var(--panel2)}
   </section>
 </div></div></div>
 <div id="drawer-overlay"></div>
-<aside id="drawer" role="dialog" aria-modal="true" aria-label="Détail session">
+<aside id="drawer" role="dialog" aria-modal="true" aria-label="Session details">
   <div id="drawer-head">
-    <h3>Détail session</h3>
-    <button class="fbtn" id="drawer-close" aria-label="Fermer">✕ Fermer</button>
+    <h3>Session details</h3>
+    <button class="fbtn" id="drawer-close" aria-label="Close">✕ Close</button>
   </div>
   <div id="drawer-body"></div>
 </aside>
-<div class="zoom-overlay" id="zoom-overlay" role="dialog" aria-modal="true" aria-label="Graphe agrandi">
+<div class="zoom-overlay" id="zoom-overlay" role="dialog" aria-modal="true" aria-label="Enlarged chart">
   <div class="zoom-card">
-    <button class="zoom-close" id="zoom-close" aria-label="Fermer">✕</button>
+    <button class="zoom-close" id="zoom-close" aria-label="Close">✕</button>
     <h3 id="zoom-title"></h3>
     <div class="canvas-wrap"><canvas id="zoom-canvas"></canvas></div></div>
 </div>
@@ -324,18 +324,18 @@ function openDrawer(sid){
   const s=all.find(x=>String(x.id)===String(sid)) || SESSIONS.find(x=>String(x.id)===String(sid));
   if(!s) return;
   const rows=[
-    ['Titre', escapeHtml(s.title||'(sans titre)')],
+    ['Title', escapeHtml(s.title||'(untitled)')],
     ['Source', escapeHtml(s.source||'opencode')],
     ['Session', escapeHtml(s.source_session_id||s.id||'')],
     ['Date', dayFrom(s.time_created||0)],
-    ['Modèle', escapeHtml(s.model_label||'?')],
+    ['Model', escapeHtml(s.model_label||'?')],
     ['Agent', escapeHtml(s.agent||'')],
-    ['Projet', escapeHtml(s.project_name||'')],
-    ['Équipe', escapeHtml(getTeam(s))],
-    ['Coût', fmtCost(s.cost)+' ('+escapeHtml(s.cost_source||'')+')'],
+    ['Project', escapeHtml(s.project_name||'')],
+    ['Team', escapeHtml(getTeam(s))],
+    ['Cost', fmtCost(s.cost)+' ('+escapeHtml(s.cost_source||'')+')'],
     ['Tokens in/out', fmtInt(s.tokens_input)+' / '+fmtInt(s.tokens_output)],
     ['Reasoning', fmtInt(s.tokens_reasoning)],
-    ['Cache lu/écr.', fmtInt(s.tokens_cache_read)+' / '+fmtInt(s.tokens_cache_write)],
+    ['Cache read/written', fmtInt(s.tokens_cache_read)+' / '+fmtInt(s.tokens_cache_write)],
   ];
   document.getElementById('drawer-body').innerHTML='<dl>'+rows.map(r=>'<dt>'+r[0]+'</dt><dd>'+r[1]+'</dd>').join('')+'</dl>';
   document.getElementById('drawer').classList.add('open');
@@ -397,10 +397,11 @@ function fmtCost(n){
   return '$'+n.toFixed(d);
 }
 function dayFrom(ts){ let ms=Number(ts)||0; if(ms<100000000000) ms*=1000; const d=new Date(ms); const p=x=>String(x).padStart(2,'0'); return d.getUTCFullYear()+'-'+p(d.getUTCMonth()+1)+'-'+p(d.getUTCDate()); }
+function tsSec(ts){ const v=Number(ts)||0; return v>100000000000? Math.floor(v/1000) : v; }
 
 function initFilters(){
   if (!SESSIONS.length){
-    $('#kpis').innerHTML='<div class="kpi"><div class="l">Aucune session</div><div class="v">0</div></div>';
+    $('#kpis').innerHTML='<div class="kpi"><div class="l">No sessions</div><div class="v">0</div></div>';
     $('#f-from').value=''; $('#f-to').value='';
     return;
   }
@@ -462,21 +463,21 @@ function parseNLQ(q){
   const qnorm=qraw.normalize('NFD').replace(/[̀-ͯ]/g,'');
   q=qnorm;
   let hint=[];
-  // modèle (substring match)
+  // model (substring match)
   const models=[...new Set(SESSIONS.map(s=>s.model_label))];
-  for(const m of models){ const ml=m.toLowerCase(); const id=m.split('/').pop().toLowerCase(); if(q.includes(ml) || q.includes(id)){ state.model=new Set([m]); const sel=$('#f-model'); if(sel) [...sel.options].forEach(o=>o.selected=o.value===m); hint.push('modèle '+m); break; } }
-  // projet
+  for(const m of models){ const ml=m.toLowerCase(); const id=m.split('/').pop().toLowerCase(); if(q.includes(ml) || q.includes(id)){ state.model=new Set([m]); const sel=$('#f-model'); if(sel) [...sel.options].forEach(o=>o.selected=o.value===m); hint.push('model '+m); break; } }
+  // project
   const projs=[...new Set(SESSIONS.map(s=>s.project_name))];
-  for(const p of projs){ if(p && (q.includes(p.toLowerCase()) || p.toLowerCase().includes(q))){ state.proj=p; $('#f-proj').value=p; hint.push('projet '+p); break; } }
-  // équipe
+  for(const p of projs){ if(p && (q.includes(p.toLowerCase()) || p.toLowerCase().includes(q))){ state.proj=p; $('#f-proj').value=p; hint.push('project '+p); break; } }
+  // team
   const teams=[...new Set(SESSIONS.map(s=>getTeam(s)))];
-  for(const t of teams){ if(q.includes(t.toLowerCase()) || t.toLowerCase().includes(q)){ state.team=t; $('#f-team').value=t; hint.push('équipe '+t); break; } }
-  // mois
-  const months={janvier:'01', fevrier:'02', mars:'03', avril:'04', mai:'05', juin:'06', juillet:'07', aout:'08', septembre:'09', octobre:'10', novembre:'11', decembre:'12'};
+  for(const t of teams){ if(q.includes(t.toLowerCase()) || t.toLowerCase().includes(q)){ state.team=t; $('#f-team').value=t; hint.push('team '+t); break; } }
+  // month (english + french)
+  const months={january:'01',janvier:'01',february:'02',fevrier:'02',march:'03',mars:'03',april:'04',avril:'04',may:'05',mai:'05',june:'06',juin:'06',july:'07',juillet:'07',august:'08',aout:'08',september:'09',septembre:'09',october:'10',octobre:'10',november:'11',novembre:'11',december:'12',decembre:'12'};
   for(const [name,num] of Object.entries(months)){ if(q.includes(name)){ const year=q.match(/20\d{2}/)?.[0] || new Date().getUTCFullYear(); state.from=year+'-'+num+'-01'; state.to=year+'-'+num+'-'+new Date(year,num,0).getUTCDate().toString().padStart(2,'0'); $('#f-from').value=state.from; $('#f-to').value=state.to; hint.push(name+' '+year); break; } }
-  if(q.includes('anomalie')){ switchView('overview', true); document.getElementById('anomaly-card')?.scrollIntoView({behavior:'smooth'}); hint.push('anomalies'); }
-  if(q.includes('coût')||q.includes('cout')||q.includes('cost')) hint.push('coût');
-  return hint.join(', ') || 'Filtres appliqués';
+  if(q.includes('anomalie')||q.includes('anomaly')){ switchView('overview', true); document.getElementById('anomaly-card')?.scrollIntoView({behavior:'smooth'}); hint.push('anomalies'); }
+  if(q.includes('coût')||q.includes('cout')||q.includes('cost')) hint.push('cost');
+  return hint.join(', ') || 'Filters applied';
 }
 function getNotes(){ try{ return JSON.parse(localStorage.getItem('session_notes')||'{}'); }catch(e){ return {}; } }
 function setNote(id, txt){
@@ -533,23 +534,23 @@ function renderKPIs(list){
   const cpm = (tin+tout)>0 ? cost/((tin+tout)/1000) : 0;
   const ratio = (tin+tcach)>0 ? tcach/(tin+tcach)*100 : 0;
   const reasonRatio = tout>0 ? (treas/tout)*100 : 0;
-  // efficacitÃ©
+  // efficiency
   const tps = list.length? Math.round((tin+tout)/list.length) : 0;
   const projN = new Set(list.map(s=>s.project_name||'?')).size;
   const cpp = projN? cost/projN : 0;
   const orig = list.reduce((a,s)=>a+Number(s.cost_original ?? s.cost ?? 0),0);
   const saving = orig - cost;
   const items=[
-    ['Co&ucirc;t total', fmtCost(cost), list.length+' sessions'],
-    ['Tokens entr&eacute;s', fmtInt(tin), ''],
-    ['Tokens sortis', fmtInt(tout), ''],
-    ['Cache lu', fmtInt(tcach), ratio.toFixed(1)+'% des tokens d&rsquo;entr&eacute;e'],
-    ['Reasoning', fmtInt(treas), reasonRatio.toFixed(1)+'% du volume sorti'],
-    ['Co&ucirc;t / 1k tokens', fmtCost(cpm), ''],
+    ['Total cost', fmtCost(cost), list.length+' sessions'],
+    ['Input tokens', fmtInt(tin), ''],
+    ['Output tokens', fmtInt(tout), ''],
+    ['Cache read', fmtInt(tcach), ratio.toFixed(1)+'% of input tokens'],
+    ['Reasoning', fmtInt(treas), reasonRatio.toFixed(1)+'% of output volume'],
+    ['Cost / 1k tokens', fmtCost(cpm), ''],
     ['Sessions', fmtInt(list.length), ''],
-    ['Tokens / session', fmtInt(tps), 'moyenne'],
-    ['Co&ucirc;t / projet', fmtCost(cpp), projN+' projet(s)'],
-    ['Ã‰conomies', fmtCost(saving), saving>0? 'vs OpenCode' : ''],
+    ['Tokens / session', fmtInt(tps), 'avg'],
+    ['Cost / project', fmtCost(cpp), projN+' project(s)'],
+    ['Savings', fmtCost(saving), saving>0? 'vs reported' : ''],
   ];
   $('#kpis').innerHTML = items.map(([l,v,d],i)=>
     '<div class="kpi"><div class="l">'+l+'</div><div class="v">'+v+'</div><div class="d">'+d+'</div><div class="kpi-spark"><canvas id="spark-'+i+'" width="120" height="28"></canvas></div></div>').join('');
@@ -591,29 +592,29 @@ function renderBudgets(list){
   if(!grid) return;
   const hasAny = BUDGETS.global || BUDGETS.by_project || BUDGETS.by_model;
   if(!hasAny){ grid.innerHTML=''; return; }
-  // coÃ»t 30j glissants
-  const now=Date.now(), monthAgo=now-30*24*3600*1000;
-  const monthList = list.filter(s=> (s.time_created||0) >= monthAgo);
+  // rolling 30d cost (timestamps normalized to seconds)
+  const now=Date.now(), monthAgoS=Math.floor(now/1000)-30*24*3600;
+  const monthList = list.filter(s=> tsSec(s.time_created) >= monthAgoS);
   const monthCost = monthList.reduce((a,s)=>a+Number(s.cost||0),0);
   const mkBar=(label, used, budget)=>{
     if(!budget) return '';
     const pct=Math.min(100, (used/budget)*100);
     const cls = pct>=100?'bad': pct>=80?'warn':'ok';
     const rest=budget-used;
-    return '<div class="budget-card"><h4>'+escapeHtml(label)+'</h4><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--mut)"><span>'+fmtCost(used)+' / '+fmtCost(budget)+'</span><span>'+pct.toFixed(0)+'%</span></div><div class="budget-bar"><div class="budget-bar-fill '+cls+'" style="width:'+pct+'%"></div></div><div class="small">'+(rest>=0? 'Reste '+fmtCost(rest) : 'DÃ©passÃ© de '+fmtCost(-rest))+'</div></div>';
+    return '<div class="budget-card"><h4>'+escapeHtml(label)+'</h4><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--mut)"><span>'+fmtCost(used)+' / '+fmtCost(budget)+'</span><span>'+pct.toFixed(0)+'%</span></div><div class="budget-bar"><div class="budget-bar-fill '+cls+'" style="width:'+pct+'%"></div></div><div class="small">'+(rest>=0? 'Remaining '+fmtCost(rest) : 'Over by '+fmtCost(-rest))+'</div></div>';
   };
   let html='';
-  if(BUDGETS.global?.monthly) html+=mkBar('Global (30j)', monthCost, BUDGETS.global.monthly);
+  if(BUDGETS.global?.monthly) html+=mkBar('Global (30d)', monthCost, BUDGETS.global.monthly);
   const byProj=BUDGETS.by_project||{};
   for(const [proj,b] of Object.entries(byProj)){
     const used=list.filter(s=>s.project_name===proj).reduce((a,s)=>a+Number(s.cost||0),0);
-    // si filtre temporel actif, on affiche aussi 30j, sinon total filtrÃ©
-    html+=mkBar('Projet '+proj, used, b.monthly);
+    // with an active time filter, also show 30d; otherwise the filtered total
+    html+=mkBar('Project '+proj, used, b.monthly);
   }
   const byModel=BUDGETS.by_model||{};
   for(const [mod,b] of Object.entries(byModel)){
     const used=list.filter(s=>s.model_label===mod).reduce((a,s)=>a+Number(s.cost||0),0);
-    html+=mkBar('ModÃ¨le '+mod, used, b.monthly);
+    html+=mkBar('Model '+mod, used, b.monthly);
   }
   grid.innerHTML=html;
 }
@@ -635,18 +636,18 @@ function detectAnomalies(list){
     const z=(v-mean)/sd;
     if(Math.abs(z)>=2) anomal.push({d,v,z,reason:'z='+z.toFixed(1)+' (Ïƒ)'});
   });
-  // +30% vs moyenne 7j glissante
+  // +30% vs rolling 7d average
   for(let i=7;i<days.length;i++){
     const win=vals.slice(i-7,i); const avg=win.reduce((a,b)=>a+b,0)/7;
     if(avg>0 && vals[i] > avg*1.3){
-      if(!anomal.find(a=>a.d===days[i][0])) anomal.push({d:days[i][0],v:vals[i],z:0,reason:'+30% vs 7j'});
+      if(!anomal.find(a=>a.d===days[i][0])) anomal.push({d:days[i][0],v:vals[i],z:0,reason:'+30% vs 7d'});
     }
   }
   if(!anomal.length){ card.style.display='none'; return; }
   card.style.display='';
   document.getElementById('anomaly-count').textContent='('+anomal.length+')';
   box.innerHTML=anomal.map(a=>'<div>ðŸ“ˆ '+a.d+' : '+fmtCost(a.v)+' <span class="anomaly-badge">'+escapeHtml(a.reason)+'</span></div>').join('');
-  // marquer lignes table
+  // mark table rows
   setTimeout(()=>{
     const badDays=new Set(anomal.map(a=>a.d));
     document.querySelectorAll('#tbody tr').forEach(tr=>{
@@ -656,17 +657,17 @@ function detectAnomalies(list){
   },0);
 }
 function renderForecast(list){
-  // rÃ©gression linÃ©aire sur coÃ»t/jour historique -> prÃ©vision 30j
+  // linear regression over historical cost/day -> 30d forecast
   const byDay=new Map();
   list.forEach(s=>{ const d=dayFrom(s.time_created||0); byDay.set(d,(byDay.get(d)||0)+Number(s.cost||0)); });
   const days=[...byDay.entries()].sort((a,b)=>a[0].localeCompare(b[0]));
   if(days.length<7){
-    mkChart('c-forecast', {type:'bar', data:{labels:[], datasets:[]}, options:{responsive:true, maintainAspectRatio:false, plugins:{title:{display:true,text:'Pas assez de donnÃ©es (â‰¥7j)', color:'#8b92b5'}}}});
+    mkChart('c-forecast', {type:'bar', data:{labels:[], datasets:[]}, options:{responsive:true, maintainAspectRatio:false, plugins:{title:{display:true,text:'Not enough data (≥7d)', color:'#8b92b5'}}}});
     return;
   }
   const vals=days.map(d=>d[1]);
   const n=vals.length;
-  // rÃ©gression y = a*x + b
+  // regression y = a*x + b
   let sx=0, sy=0, sxy=0, sxx=0;
   for(let i=0;i<n;i++){ sx+=i; sy+=vals[i]; sxy+=i*vals[i]; sxx+=i*i; }
   const denom=(n*sxx - sx*sx)||1;
@@ -691,12 +692,12 @@ function renderForecast(list){
   mkChart('c-forecast', {type:'bar', data:{
     labels: allLabels,
     datasets:[
-      {label:'Historique', data: extendedHist, backgroundColor:'#6c8bff', borderColor:'#6c8bff', type:'bar'},
-      {label:'PrÃ©vision 30j', data: extendedForecast, backgroundColor:'rgba(61,220,151,0.6)', borderColor:'#3ddc97', borderDash:[6,4], type:'line', fill:false, tension:0.2, pointRadius:2}
+      {label:'History', data: extendedHist, backgroundColor:'#6c8bff', borderColor:'#6c8bff', type:'bar'},
+      {label:'30-day forecast', data: extendedForecast, backgroundColor:'rgba(61,220,151,0.6)', borderColor:'#3ddc97', borderDash:[6,4], type:'line', fill:false, tension:0.2, pointRadius:2}
     ]
   }, options:{
     responsive:true, maintainAspectRatio:false, animation:CHART_ANIM,
-    plugins:{legend:{labels:{color:'#8b92b5',font:{size:10},boxWidth:12,padding:12}}, tooltip:CHART_TOOLTIP, title:{display:true, text:'PrÃ©vision 30j : '+fmtCost(sumForecast)+' (pente '+a.toFixed(4)+'/j)', color:'#8b92b5', font:{size:11}}},
+    plugins:{legend:{labels:{color:'#8b92b5',font:{size:10},boxWidth:12,padding:12}}, tooltip:CHART_TOOLTIP, title:{display:true, text:'30-day forecast: '+fmtCost(sumForecast)+' (slope '+a.toFixed(4)+'/d)', color:'#8b92b5', font:{size:11}}},
     scales:{x:{ticks:{color:'#8b92b5', maxTicksLimit:12, maxRotation:30}, grid:{color:'rgba(42,48,82,0.2)'}}, y:{ticks:{color:'#8b92b5'}, grid:{color:'rgba(42,48,82,0.3)'}}}
   }});
 }
@@ -704,7 +705,7 @@ function renderForecast(list){
 let zoomChart=null;
 function mkChart(id, cfg){
   const el = document.getElementById(id) || $('#'+id);
-  if (!el){ console.warn('canvas introuvable:', id); return; }
+  if (!el){ console.warn('canvas not found:', id); return; }
   if (charts[id]){ charts[id].destroy(); }
   charts[id] = new Chart(el.getContext('2d'), cfg);
   // store cfg for zoom
@@ -734,7 +735,7 @@ function closeZoom(){
 }
 
 function renderCharts(list){
-  // 1. cout/jour
+  // 1. cost/day
   const cd=aggDay(list);
   let cfg = {type:'bar', data:{labels: cd.days, datasets: cd.models.map((m,i)=>({ label:m, data:cd.days.map(d=>cd.data.get(m).get(d)||0), backgroundColor:PALETTE[i%PALETTE.length], borderColor:PALETTE[i%PALETTE.length], borderWidth:1, borderRadius:3, stack:'c' }))}, options:{ responsive:true, maintainAspectRatio:false, animation:CHART_ANIM, plugins:{legend:{labels:{color:'#8b92b5',font:{size:10},boxWidth:12,padding:12}}, tooltip:CHART_TOOLTIP}, scales:{x:{stacked:true,ticks:{color:'#8b92b5',maxRotation:30},grid:{color:'rgba(42,48,82,0.3)'}},y:{stacked:true,ticks:{color:'#8b92b5'},grid:{color:'rgba(42,48,82,0.3)'}}} }};
   mkChart('c-cost-day', cfg);
@@ -746,19 +747,19 @@ function renderCharts(list){
   mkChart('c-tok-day', cfg);
   if(charts['c-tok-day']){ charts['c-tok-day'].options.onClick=(e,els)=>{ if(els.length){ const idx=els[0].index; const day=td.days[idx]; if(day){ if(e.native) e.native.stopPropagation(); doDrillFilter('day', day); } } }; charts['c-tok-day'].update(); }
 
-  // 3. donut cout/model
+  // 3. cost/model donut
   const cm=sumBy(list,'model_label');
   cfg = {type:'doughnut', data:{labels: cm.map(e=>e[0]), datasets:[{ data:cm.map(e=>e[1]), backgroundColor:PALETTE, borderColor:'#171b2e', borderWidth:2, hoverOffset:6 }]}, options:{ responsive:true, maintainAspectRatio:false, animation:CHART_ANIM, cutout:'58%', plugins:{legend:{position:'right',labels:{color:'#8b92b5',font:{size:10},padding:10,boxWidth:12}}, tooltip:{...CHART_TOOLTIP, callbacks:{label:(c)=>' '+c.label+': '+fmtCost(c.parsed)}} }}};
   mkChart('c-cost-model', cfg);
   if(charts['c-cost-model']){ charts['c-cost-model'].options.onClick=(e,els)=>{ if(els.length){ const i=els[0].index; const lbl=cm[i]&&cm[i][0]; if(lbl) doDrillFilter('model', lbl); } }; charts['c-cost-model'].update(); }
 
-  // 4. bar cout/agent
+  // 4. cost/agent bar
   const ca=sumBy(list,'agent');
   cfg = {type:'bar', data:{labels: ca.map(e=>e[0]), datasets:[{ data:ca.map(e=>e[1]), backgroundColor:PALETTE, borderColor:PALETTE, borderWidth:1, borderRadius:4 }]}, options:{ responsive:true, maintainAspectRatio:false, animation:CHART_ANIM, plugins:{legend:{display:false}, tooltip:CHART_TOOLTIP}, scales:{y:{ticks:{color:'#8b92b5'},grid:{color:'rgba(42,48,82,0.3)'}},x:{ticks:{color:'#8b92b5'},grid:{display:false}}} }};
   mkChart('c-cost-agent', cfg);
   if(charts['c-cost-agent']){ charts['c-cost-agent'].options.onClick=(e,els)=>{ if(els.length){ const i=els[0].index; const lbl=ca[i]&&ca[i][0]; if(lbl) doDrillFilter('agent', lbl); } }; charts['c-cost-agent'].update(); }
 
-  // 5. histogramme cout/session
+  // 5. cost/session histogram
   const cos=list.map(s=>Number(s.cost||0)).filter(c=>c>0).sort((a,b)=>a-b);
   const buckets={};
   cos.forEach(c=>{ const k=Math.max(1,Math.min(10,Math.ceil(Math.log10(c+1)))); buckets[k]=(buckets[k]||0)+1; });
@@ -766,18 +767,18 @@ function renderCharts(list){
   cfg = {type:'bar', data:{labels: ordered.map(k=>k===1?'>0.01':('<1e'+k)), datasets:[{ data:ordered.map(k=>buckets[k]), backgroundColor:'#6c8bff', borderColor:'#6c8bff', borderWidth:1, borderRadius:4 }]}, options:{ responsive:true, maintainAspectRatio:false, animation:CHART_ANIM, plugins:{legend:{display:false}, tooltip:CHART_TOOLTIP}, scales:{y:{ticks:{color:'#8b92b5'},grid:{color:'rgba(42,48,82,0.3)'}},x:{ticks:{color:'#8b92b5'},grid:{display:false}}} }};
   mkChart('c-cost-hist', cfg);
 
-  // 6. cache/erreurs : cache lu vs entr?e + erreurs
+  // 6. cache/errors: cache read vs input + errors
   const tcr=list.reduce((a,s)=>a+Number(s.tokens_cache_read||0),0);
   const tin=list.reduce((a,s)=>a+Number(s.tokens_input||0),0);
   const saw=list.length;
   const errs=list.filter(s=>s.error).length;
-  cfg = {type:'doughnut', data:{labels:['Cache lu','Entr\\u00e9e (hors cache)'], datasets:[{ data:[tcr, Math.max(0,tin)], backgroundColor:[PALETTE[0],PALETTE[2]], borderColor:'#171b2e', borderWidth:2, hoverOffset:6 }]}, options:{ responsive:true, maintainAspectRatio:false, animation:CHART_ANIM, cutout:'58%', plugins:{legend:{position:'right',labels:{color:'#8b92b5',font:{size:10},padding:10,boxWidth:12}}, tooltip:{...CHART_TOOLTIP, callbacks:{label:(c)=>' '+c.label+': '+fmtInt(c.parsed)+' tok'}}} }};
+  cfg = {type:'doughnut', data:{labels:['Cache read','Input (uncached)'], datasets:[{ data:[tcr, Math.max(0,tin)], backgroundColor:[PALETTE[0],PALETTE[2]], borderColor:'#171b2e', borderWidth:2, hoverOffset:6 }]}, options:{ responsive:true, maintainAspectRatio:false, animation:CHART_ANIM, cutout:'58%', plugins:{legend:{position:'right',labels:{color:'#8b92b5',font:{size:10},padding:10,boxWidth:12}}, tooltip:{...CHART_TOOLTIP, callbacks:{label:(c)=>' '+c.label+': '+fmtInt(c.parsed)+' tok'}}} }};
   mkChart('c-cache', cfg);
 
-  // 7. forecast 30j
+  // 7. 30d forecast
   renderForecast(list);
 
-  // 8. coût par équipe
+  // 8. cost by team
   const cteam=[...list.reduce((m,s)=>{ const k=getTeam(s); m.set(k,(m.get(k)||0)+Number(s.cost||0)); return m; }, new Map()).entries()].sort((a,b)=>b[1]-a[1]);
   cfg = {type:'bar', data:{labels: cteam.map(e=>e[0]), datasets:[{ data:cteam.map(e=>e[1]), backgroundColor:PALETTE, borderColor:PALETTE, borderWidth:1, borderRadius:4 }]}, options:{ responsive:true, maintainAspectRatio:false, animation:CHART_ANIM, plugins:{legend:{display:false}, tooltip:CHART_TOOLTIP}, scales:{y:{ticks:{color:'#8b92b5'},grid:{color:'rgba(42,48,82,0.3)'}},x:{ticks:{color:'#8b92b5'},grid:{display:false}}} }};
   mkChart('c-cost-team', cfg);
@@ -793,7 +794,7 @@ function renderTable(list){
   const total=rows.length;
   const start=state.page*state.pageSize, end=Math.min(total, start+state.pageSize);
   const pageRows=rows.slice(start,end);
-  $('#t-count').textContent='('+total+') '+(total>state.pageSize? (start+1)+'-'+end+' sur '+total : '');
+  $('#t-count').textContent='('+total+') '+(total>state.pageSize? (start+1)+'-'+end+' of '+total : '');
   const notes=getNotes();
   $('#tbody').innerHTML = pageRows.map(s=>{
     const note=notes[s.id]||'';
@@ -810,21 +811,21 @@ function renderTable(list){
     '<td>'+fmtInt(s.tokens_cache_read)+'</td>'+
     '<td>'+fmtInt(s.tokens_reasoning)+'</td>'+
     '<td>'+fmtInt(s.tokens_cache_write)+'</td>'+
-    '<td>'+(s.cost_source==='pricing' || String(s.cost_source||'').startsWith('pricing')? '<span class="pos">personnalisé</span>' : '<span class="neg">'+escapeHtml(s.cost_source||s.source||'opencode')+'</span>')+'</td>'+
-    '<td><button class="fbtn" data-note="'+s.id+'" title="'+escapeHtml(note||'Ajouter note')+'">'+(note?'📝':'🗒️')+'</button></td></tr>';
-  }).join('') || '<tr><td colspan="99" style="text-align:center;color:var(--mut)">Aucun résultat</td></tr>';
+    '<td>'+(s.cost_source==='pricing' || String(s.cost_source||'').startsWith('pricing')? '<span class="pos">custom</span>' : '<span class="neg">'+escapeHtml(s.cost_source||s.source||'opencode')+'</span>')+'</td>'+
+    '<td><button class="fbtn" data-note="'+s.id+'" title="'+escapeHtml(note||'Add note')+'">'+(note?'📝':'🗒️')+'</button></td></tr>';
+  }).join('') || '<tr><td colspan="99" style="text-align:center;color:var(--mut)">No results</td></tr>';
   document.querySelectorAll('[data-note]').forEach(b=>{
     b.addEventListener('click', ()=>{
       const id=b.dataset.note;
       const cur=getNotes()[id]||'';
-      const txt=prompt('Note pour '+id+':', cur);
+      const txt=prompt('Note for '+id+':', cur);
       if(txt!==null){ setNote(id, txt); renderTable(list); }
     });
   });
   const nav=$('#t-nav');
   if(nav){
     const pages=Math.ceil(total/state.pageSize);
-    nav.innerHTML = pages<=1? '' : '<button class="fbtn" id="t-prev" '+(state.page===0?'disabled':'')+'>â† PrÃ©c.</button> <span class="small">page '+(state.page+1)+'/'+pages+'</span> <button class="fbtn" id="t-next" '+(state.page>=pages-1?'disabled':'')+'>Suiv. â†’</button>';
+    nav.innerHTML = pages<=1? '' : '<button class="fbtn" id="t-prev" '+(state.page===0?'disabled':'')+'>← Prev</button> <span class="small">page '+(state.page+1)+'/'+pages+'</span> <button class="fbtn" id="t-next" '+(state.page>=pages-1?'disabled':'')+'>Next →</button>';
     const prev=nav.querySelector('#t-prev'), next=nav.querySelector('#t-next');
     if(prev) prev.onclick=()=>{ if(state.page>0){state.page--; renderTable(list);} };
     if(next) next.onclick=()=>{ if(state.page<pages-1){state.page++; renderTable(list);} };
@@ -839,7 +840,7 @@ function renderCompare(list){
   const allModels=[...new Set(SESSIONS.map(s=>s.model_label))];
   if(sel.length<2 || sel.length===allModels.length){ card.style.display='none'; if(charts['c-compare']){ charts['c-compare'].destroy(); delete charts['c-compare']; } return; }
   card.style.display='';
-  // stats per modèle
+  // stats per model
   grid.innerHTML=sel.map(m=>{
     const sub=list.filter(s=>s.model_label===m);
     const cost=sub.reduce((a,s)=>a+Number(s.cost||0),0);
@@ -848,7 +849,7 @@ function renderCompare(list){
     const avg=cnt? tok/cnt:0;
     return '<div class="compare-card"><h4>'+escapeHtml(m)+'</h4><div class="big">'+fmtCost(cost)+'</div><div class="small">'+cnt+' sessions • '+fmtInt(tok)+' tok • '+fmtInt(Math.round(avg))+' tok/sess</div></div>';
   }).join('');
-  // line compare par jour
+  // line compare per day
   const byDay=new Map();
   const days=[...new Set(list.map(s=>dayFrom(s.time_created||0)))].sort();
   sel.forEach(m=> byDay.set(m, new Map(days.map(d=>[d,0]))));
@@ -872,12 +873,12 @@ function render(){
   renderCompare(list);
   renderTable(list);
   pushURL();
-  // maj badge live
+  // live badge update
   const liveN=Object.keys(getLivePricing()).length;
   const dbLine=$('#db-line');
   if(dbLine){
-    const baseTxt='Source : '+(DATA.db_path||'')+(DATA.generated_at? ' • màj '+DATA.generated_at : '');
-    dbLine.textContent= baseTxt + (Object.keys(PRICING).length? ' â€¢ '+Object.keys(PRICING).length+' modÃ¨le(s) Ã  prix personnalisÃ©':'') + (liveN? ' â€¢ '+liveN+' (live)':'');
+    const baseTxt='Source: '+(DATA.db_path||'')+(DATA.generated_at? ' • updated '+DATA.generated_at : '');
+    dbLine.textContent= baseTxt + (Object.keys(PRICING).length? ' • '+Object.keys(PRICING).length+' model(s) with custom pricing':'') + (liveN? ' • '+liveN+' (live)':'');
   }
 }
 
@@ -923,21 +924,21 @@ function bindEvents(){
   const share=$('#share-link'); if(share) share.addEventListener('click', ()=>{
     pushURL();
     const url=location.href;
-    if(navigator.clipboard) navigator.clipboard.writeText(url).then(()=>{ share.textContent='✓ Copié'; setTimeout(()=>share.textContent='🔗 Partager',1500); }).catch(()=>{ prompt('Lien à copier:', url); });
-    else prompt('Lien à copier:', url);
+    if(navigator.clipboard) navigator.clipboard.writeText(url).then(()=>{ share.textContent='✓ Copied'; setTimeout(()=>share.textContent='🔗 Share',1500); }).catch(()=>{ prompt('Link to copy:', url); });
+    else prompt('Link to copy:', url);
   });
-  // onglets
+  // tabs
   document.querySelectorAll('.tab-btn').forEach(b=>{
     b.addEventListener('click', ()=> switchView(b.dataset.view));
   });
-  // panneau filtres repliable
+  // collapsible filter panel
   const ft=$('#filters-toggle'), fp=$('#filters-panel');
   if(ft && fp) ft.addEventListener('click', ()=>{
     const collapsed=fp.classList.toggle('collapsed');
-    ft.textContent=collapsed? '＋ Filtres' : '－ Filtres';
+    ft.textContent=collapsed? '＋ Filters' : '－ Filters';
     ft.setAttribute('aria-expanded', collapsed? 'false':'true');
   });
-  // drawer détail
+  // session detail drawer
   const dc=$('#drawer-close'), dov=$('#drawer-overlay');
   if(dc) dc.addEventListener('click', closeDrawer);
   if(dov) dov.addEventListener('click', closeDrawer);
@@ -977,7 +978,7 @@ function bindEvents(){
 
 function exportCSV(){
   const sep=';', esc=v=>{ v=String(v==null?'':v); return /[;"\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; };
-  const head=['date','titre','modele','agent','projet','source','cout','tokens_in','tokens_out','tokens_reasoning','cache_read','cache_write','cout_source'];
+  const head=['date','title','model','agent','project','source','cost','tokens_in','tokens_out','tokens_reasoning','cache_read','cache_write','cost_source'];
   const lines=withLiveCosts(filtered()).map(s=>[dayFrom(s.time_created),s.title,s.model_label,s.agent,s.project_name,(s.source||'opencode'),Number(s.cost||0).toFixed(6),s.tokens_input,s.tokens_output,s.tokens_reasoning,s.tokens_cache_read,s.tokens_cache_write,s.cost_source].map(esc).join(sep));
   const blob=new Blob(['﻿'+[head.join(sep),...lines].join('\n')],{type:'text/csv;charset=utf-8'});
   const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='usage_ai.csv'; document.body.appendChild(a); a.click(); setTimeout(()=>{ document.body.removeChild(a); URL.revokeObjectURL(url);},500);
@@ -1043,10 +1044,10 @@ function buildPricingRows(){
     return '<div class="prow"><div class="mid" data-m="'+m+'">'+m+'</div>'+
       '<div><label>input</label><input type="number" step="0.001" min="0" class="p-in" value="'+v('input_per_1M')+'"></div>'+
       '<div><label>output</label><input type="number" step="0.001" min="0" class="p-out" value="'+v('output_per_1M')+'"></div>'+
-      '<div><label>cache lu</label><input type="number" step="0.001" min="0" class="p-cr" value="'+v('cache_read_per_1M')+'"></div>'+
-      '<div><label>cache writ.</label><input type="number" step="0.001" min="0" class="p-cw" value="'+v('cache_write_per_1M')+'"></div>'+
+      '<div><label>cache read</label><input type="number" step="0.001" min="0" class="p-cr" value="'+v('cache_read_per_1M')+'"></div>'+
+      '<div><label>cache write</label><input type="number" step="0.001" min="0" class="p-cw" value="'+v('cache_write_per_1M')+'"></div>'+
       '<div><label>reasoning</label><input type="number" step="0.001" min="0" class="p-re" value="'+v('reasoning_per_1M')+'"></div>'+
-      '<div><button class="fbtn" data-clear="'+m+'">Eff.</button></div></div>';
+      '<div><button class="fbtn" data-clear="'+m+'">Clear</button></div></div>';
   }).join('');
   const saveDraft=()=>{
     const d=getLivePricing();
@@ -1075,16 +1076,16 @@ function debouncedLiveRender(){
 
 function exportPricing(){
   const out=getLivePricing();
-  const payload={ "$comment":"Personnalisation des couts par modele (USD / 1M tokens). Relancer : python extract.py --full && python build_report.py","models":out };
+  const payload={ "$comment":"Per-model cost customization (USD / 1M tokens). Rerun: python extract.py --full && python build_report.py","models":out };
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='pricing.json'; document.body.appendChild(a); a.click(); setTimeout(()=>document.body.removeChild(a),500);
   try{ localStorage.setItem('pricing_draft', JSON.stringify({models:out})); }catch(e){}
-  $('#p-status').textContent='pricing.json exportÃ© ('+Object.keys(out).length+' modÃ¨le(s)) - remplacez config/pricing.json puis: python extract.py --full && python build_report.py';
+  $('#p-status').textContent='pricing.json exported ('+Object.keys(out).length+' model(s)) - replace config/pricing.json then: python extract.py --full && python build_report.py';
 }
 function clearDraft(){
   try{ localStorage.removeItem('pricing_draft'); }catch(e){}
   buildPricingRows(); render();
-  $('#p-status').textContent='Brouillon effacÃ©.';
+  $('#p-status').textContent='Draft cleared.';
 }
 function getLiveBudgets(){
   const out={global:{}, by_project:{}, by_model:{}};
@@ -1110,14 +1111,14 @@ function buildBudgetsEditRows(){
   const models=[...new Set(SESSIONS.map(s=>s.model_label||'?'))].sort();
   const projects=[...new Set(SESSIONS.map(s=>s.project_name||'?'))].sort();
   const gVal = budgets.global?.monthly ?? '';
-  let html='<div class="prow" style="grid-template-columns:1.6fr 1fr .5fr"><div class="mid">Global</div><div><label>mensuel $</label><input type="number" step="0.01" min="0" id="budget-global" value="'+gVal+'"></div><div><button class="fbtn" onclick="document.getElementById(\'budget-global\').value=\'\'; saveBudgetsDraft(); debouncedLiveRender();">Eff.</button></div></div>';
+  let html='<div class="prow" style="grid-template-columns:1.6fr 1fr .5fr"><div class="mid">Global</div><div><label>monthly $</label><input type="number" step="0.01" min="0" id="budget-global" value="'+gVal+'"></div><div><button class="fbtn" onclick="document.getElementById(\'budget-global\').value=\'\'; saveBudgetsDraft(); debouncedLiveRender();">Clear</button></div></div>';
   html+=models.map(m=>{
     const v=budgets.by_model?.[m]?.monthly ?? '';
-    return '<div class="prow brow" data-kind="model" data-key="'+escapeHtml(m)+'" style="grid-template-columns:1.6fr 1fr .5fr"><div class="mid">'+escapeHtml(m)+'</div><div><label>mensuel $</label><input type="number" step="0.01" min="0" value="'+v+'"></div><div><button class="fbtn" data-bclear>Eff.</button></div></div>';
+    return '<div class="prow brow" data-kind="model" data-key="'+escapeHtml(m)+'" style="grid-template-columns:1.6fr 1fr .5fr"><div class="mid">'+escapeHtml(m)+'</div><div><label>monthly $</label><input type="number" step="0.01" min="0" value="'+v+'"></div><div><button class="fbtn" data-bclear>Clear</button></div></div>';
   }).join('');
   html+=projects.map(p=>{
     const v=budgets.by_project?.[p]?.monthly ?? '';
-    return '<div class="prow brow" data-kind="project" data-key="'+escapeHtml(p)+'" style="grid-template-columns:1.6fr 1fr .5fr"><div class="mid">'+escapeHtml(p)+' (projet)</div><div><label>mensuel $</label><input type="number" step="0.01" min="0" value="'+v+'"></div><div><button class="fbtn" data-bclear>Eff.</button></div></div>';
+    return '<div class="prow brow" data-kind="project" data-key="'+escapeHtml(p)+'" style="grid-template-columns:1.6fr 1fr .5fr"><div class="mid">'+escapeHtml(p)+' (project)</div><div><label>monthly $</label><input type="number" step="0.01" min="0" value="'+v+'"></div><div><button class="fbtn" data-bclear>Clear</button></div></div>';
   }).join('');
   const cont=document.getElementById('budgets-edit-rows');
   if(!cont) return;
@@ -1142,23 +1143,23 @@ function buildBudgetsEditRows(){
 function exportBudgets(){
   const out=getLiveBudgets();
   if(!out.global && !out.by_model && !out.by_project) out.global={monthly:0};
-  const payload={"$comment":"Budgets mensuels USD — consolidé globalement. Relancer : python extract.py --full && python build_report.py", ...out};
+  const payload={"$comment":"Monthly USD budgets — consolidated globally. Rerun: python extract.py --full && python build_report.py", ...out};
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='budgets.json'; document.body.appendChild(a); a.click(); setTimeout(()=>{ document.body.removeChild(a), URL.revokeObjectURL(url); },500);
   try{ localStorage.setItem('budgets_draft', JSON.stringify(out)); }catch(e){}
-  const st=document.getElementById('b-status'); if(st) st.textContent='budgets.json exporté ('+Object.keys(out.by_model||{}).length+' modèles, '+Object.keys(out.by_project||{}).length+' projets)';
+  const st=document.getElementById('b-status'); if(st) st.textContent='budgets.json exported ('+Object.keys(out.by_model||{}).length+' models, '+Object.keys(out.by_project||{}).length+' projects)';
 }
 function clearBudgetsDraft(){
   try{ localStorage.removeItem('budgets_draft'); }catch(e){}
   buildBudgetsEditRows(); render();
-  const st=document.getElementById('b-status'); if(st) st.textContent='Brouillon budgets effacÃ©.';
+  const st=document.getElementById('b-status'); if(st) st.textContent='Budgets draft cleared.';
 }
 function initMeta(){
   const t=DATA.totals||{};
-  $('#meta-sub').textContent='GÃ©nÃ©rÃ© le '+(DATA.generated_at||'').replace('T',' ').replace('Z',' UTC')+' (UTC) â€¢ '+fmtInt(t.sessions)+' sessions';
-  $('#db-line').textContent='Source : '+(DATA.db_path||'');
+  $('#meta-sub').textContent='Generated '+(DATA.generated_at||'').replace('T',' ').replace('Z',' UTC')+' (UTC) • '+fmtInt(t.sessions)+' sessions';
+  $('#db-line').textContent='Source: '+(DATA.db_path||'');
   const nOverride=Object.keys(PRICING).length;
-  if (nOverride) $('#db-line').textContent+=' â€¢ '+nOverride+' modÃ¨le(s) Ã  prix personnalisÃ©';
+  if (nOverride) $('#db-line').textContent+=' • '+nOverride+' model(s) with custom pricing';
 }
 
 function initApp(){
