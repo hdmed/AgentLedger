@@ -1,6 +1,6 @@
 PYTHON := python
 
-.PHONY: extract report watch full all clean open test
+.PHONY: extract report watch full all clean open open-app test exe exe-debug
 
 # Extraction incrémentale (delta depuis le dernier sync)
 extract:
@@ -27,8 +27,17 @@ open:
 	$(PYTHON) -c "import os,webbrowser; webbrowser.open('file:///'+os.path.abspath('dist/report.html'))"
 
 test:
-	$(PYTHON) -m py_compile extract.py build_report.py
+	$(PYTHON) -m py_compile extract.py extract_kilo.py extract_autoclaw.py extract_workbuddy.py build_report.py resources.py launcher.py build_exe.py notification.py
 	$(PYTHON) -m unittest discover -s tests -v
+
+exe:
+	$(PYTHON) build_exe.py --confirm
+
+exe-debug:
+	$(PYTHON) build_exe.py --onedir --confirm
+
+open-app:
+	$(PYTHON) launcher.py
 
 # Remet à zéro le cache d'extraction (dataset + état de sync + rapport)
 clean:

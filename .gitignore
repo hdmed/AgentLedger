@@ -1,5 +1,12 @@
 data/dataset.json
 data/sync_state.json
+data/kilo_sync_state.json
+data/autoclaw_sync_state.json
+data/workbuddy_sync_state.json
 dist/report.html
+dist/dataset.json
+dist/OpenCost*
+build/
+OpenCost.spec
 __pycache__/
 *.pyc

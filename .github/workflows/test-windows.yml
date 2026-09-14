@@ -1,8 +1,8 @@
-﻿name: test
+name: test-windows
 on: [push, pull_request]
 jobs:
-  test:
-    runs-on: ubuntu-latest
+  test-windows:
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -10,9 +10,17 @@ jobs:
       - run: python -m py_compile extract.py extract_kilo.py extract_autoclaw.py extract_workbuddy.py build_report.py resources.py launcher.py build_exe.py notification.py
       - run: python -m unittest discover -s tests -v
       - run: |
-          if [ ! -f data/dataset.json ]; then
-            echo "CI: dataset manquant, création dummy"
-            mkdir -p data
+          if (-not (Test-Path data/dataset.json)) {
+            Write-Host "CI: dataset manquant, création dummy"
+            New-Item -ItemType Directory -Path data -Force | Out-Null
             python -c "import json; json.dump({'generated_at':'2026-08-30T00:00:00Z','db_path':'ci','pricing_config':{'models':{}},'budgets':{},'models':[],'totals':{'cost':0,'sessions':0,'tokens_input':0,'tokens_output':0,'tokens_reasoning':0,'tokens_cache_read':0,'tokens_cache_write':0},'sessions':[]}, open('data/dataset.json','w'))"
-          fi
+          }
           python build_report.py --strict
+        shell: powershell
+      - run: pip install pyinstaller
+      - run: python build_exe.py --confirm
+      - run: |
+          $env:OPENCOST_USER_DIR = "$env:TEMP\oc_ci_user"
+          .\dist\OpenCost.exe --version
+          .\dist\OpenCost.exe --diagnose
+        shell: powershell
