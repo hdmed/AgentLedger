@@ -17,4 +17,4 @@ labels: enhancement
 - [ ] Non-destructive schema inventory documented
 - [ ] Read-only access, dummy fixtures (nominal / empty / corrupt / unknown schema)
 - [ ] `(source, source_session_id)` dedup + independent watermark
-- [ ] `Docs/<Agent>.md` with fallbacks
+- [ ] `README.md` connector row + documented fallbacks

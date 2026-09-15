@@ -264,7 +264,7 @@ class TestExtract(unittest.TestCase):
 class TestSampleData(unittest.TestCase):
     def test_fixtures_documentees(self):
         if not os.path.isdir(SAMPLE_DIR):
-            self.skipTest("fixtures sample-data non versionnées (Docs/ local uniquement)")
+            self.skipTest("sample-data fixtures not versioned (local Docs/ only)")
         journal = read_journal(SAMPLE_DIR)
         snap = read_snapshot(SAMPLE_DIR)
         self.assertEqual(len(journal), 8)

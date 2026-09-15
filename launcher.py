@@ -83,7 +83,7 @@ def parse_args(argv=None):
     parser.add_argument("--kilo-full", action="store_true", help="full Kilo re-extraction")
     parser.add_argument("--kilo-since", default=None, help="extract Kilo from a YYYY-MM-DD date")
     parser.add_argument("--no-kilo", action="store_true", help="disable the Kilo connector")
-    parser.add_argument("--autoclaw-dir", default=None, help="AutoClaw telemetry/ folder (default: auto-detect, see Docs/AutCLW.md)")
+    parser.add_argument("--autoclaw-dir", default=None, help="AutoClaw telemetry/ folder (default: auto-detect: %%LOCALAPPDATA%%/AgentLedger/telemetry)")
     parser.add_argument("--autoclaw-full", action="store_true", help="full AutoClaw re-extraction")
     parser.add_argument("--autoclaw-since", default=None, help="extract AutoClaw from a YYYY-MM-DD date")
     parser.add_argument("--no-autoclaw", action="store_true", help="disable the AutoClaw connector")

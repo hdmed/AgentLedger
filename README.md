@@ -2,6 +2,7 @@
 
 ![CI](https://github.com/hdmed/AgentLedger/actions/workflows/test.yml/badge.svg)
 ![CI Windows](https://github.com/hdmed/AgentLedger/actions/workflows/test-windows.yml/badge.svg)
+![Release](https://img.shields.io/github/v/release/hdmed/AgentLedger.svg)
 ![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)
 ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-blue.svg)
 ![Python](https://img.shields.io/badge/python-3.10%2B%20stdlib-blue.svg)
@@ -22,7 +23,7 @@ Supported sources (additive merge, dedup key `(source, source_session_id)`):
 | WorkBuddy | `extract_workbuddy.py` | `workbuddy.db` (SQLite): sessions + plan credits |
 
 > WorkBuddy bills in **plan credits, not USD** — imported as-is with
-> `cost_source="workbuddy"`. See [`Docs/WorkBuddy.md`](Docs/WorkBuddy.md).
+> `cost_source="workbuddy"`.
 
 ## Requirements
 
@@ -36,12 +37,10 @@ Default database locations:
 
 ## Documentation
 
-- Overview and commands: `Docs/README.md`
-- Dashboard structure: `Docs/dashboard.md`
-- Target architecture: `Docs/architecture.md`
-- Roadmap: `Docs/plan.md`
-- Connectors: `Docs/AutCLW.md`, `Docs/WorkBuddy.md`
 - Changelog: `CHANGELOG.md`
+- Contributing (incl. translation guide): `CONTRIBUTING.md`
+- Extended docs live in `Docs/` (architecture, dashboard, roadmap,
+  connectors) — personal notes, not versioned, available locally only.
 
 ## Quick start
 
@@ -112,7 +111,7 @@ the key is `providerID/modelID`:
 
 - A model **missing** from the list keeps the cost **computed by its agent**.
 - After editing: `python extract.py --full ; python build_report.py`.
-- In the report, the cost panel is **live**: typing recalculates KPIs/charts/table instantly, saves a `localStorage` draft, and `Export pricing.json` downloads the file (replace `config/pricing.json` then `--full` to persist). 🌓 light/dark theme.
+- In the report, the cost panel is **live**: typing recalculates KPIs/charts/table instantly, saves a `localStorage` draft, and `Export pricing.json` downloads the file (replace `config/pricing.json` then `--full` to persist). 🌓 light/dark "noir champagne" theme.
 - `python build_report.py --external`: external `dataset.json` (fetch) for large volumes (>10k sessions) instead of inline.
 
 ## The report (`dist/report.html`)

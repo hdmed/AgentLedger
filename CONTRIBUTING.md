@@ -36,8 +36,9 @@ Useful targets (`make`): `test` (compile + unittest), `check-js`
 4. New connector? Follow `extract_workbuddy.py` (smallest full example):
    `default_db_path()` (+ env override), `inspect_schema()`,
    `fetch_sessions()`, `extract()`, `max_time()`, separate
-   `data/<source>_sync_state.json`, `--no-<source>` launcher flag,
-   `Docs/<Source>.md` with the observed schema and fallbacks.
+   `data/<source>_sync_state.json`, `--no-<source>` launcher flag.
+   Document the observed schema and fallbacks (locally under `Docs/`,
+   personal notes not versioned).
 5. Template change? Run `make check-js` and keep canvas `id`s unique
    across views. User-facing text goes through `t()`/`tf()` or
    `data-i18n*` — never raw literals.
