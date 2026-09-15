@@ -118,24 +118,27 @@ the key is `providerID/modelID`:
 ## The report (`dist/report.html`)
 
 - Tabs: Overview / Models / Projects / Sessions (deep-linkable via `?view=`)
-- KPIs: total cost, input/output tokens, cache, cost/1k tokens, sessions
-- Charts: cost & tokens/day by model, cost donut by model, cost by agent,
-  cost/session histogram, cache ratio
+- Luxury "noir champagne" theme (serif gold title, light/dark modes)
+- KPIs in Costs/Tokens groups with sparklines, tokens in M/K
+- Charts: trio row + per-model doughnuts, cost & tokens/day by model,
+  cost donut by model, cost by agent, cost/session histogram, cache ratio
 - Filters: sticky compact bar (dates, title search, source) + expandable panel
   (multi-model, agent, project, team, min/max cost)
-- Sortable detail table (100/page, `aria-live`) + live CSV/JSON export,
+- Sortable detail table (100/page, sticky first column, `aria-live`) + live CSV/JSON export,
   click a row for the session detail drawer
-- Zero network calls on load (except `--external`): Chart.js and data inlined
-- `make test`: `py_compile` + `unittest` (95 tests); GitHub Actions (Linux + Windows)
+- Zero network calls on load (except `--external`): Chart.js, locales and data inlined
+- `make test`: `py_compile` + `unittest` (106 tests); GitHub Actions (Linux + Windows)
 
 ## Layout
 
 ```
 config/pricing.json      # custom per-model costs (editable)
 config/budgets.json      # monthly caps: global / per-project / per-model
+locales/*.json           # report UI strings EN/FR/ES/PT/ZH/HI/AR/BN/RU/ID
 data/dataset.json        # aggregated data (generated, not versioned)
 data/*_sync_state.json   # incremental sync watermarks (generated)
 assets/chart.umd.min.js  # Chart.js bundled at build time (offline)
+assets/thumbnail.png      # README preview (headless-Chrome capture)
 resources.py             # source/frozen path resolution
 extract*.py              # database/telemetry -> dataset.json
 build_report.py          # dataset.json -> dist/report.html
