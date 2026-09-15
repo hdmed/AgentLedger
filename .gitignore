@@ -13,3 +13,5 @@ AgentLedger.spec
 __pycache__/
 *.pyc
 .opencode/
+Docs/
+AGENTS.md
